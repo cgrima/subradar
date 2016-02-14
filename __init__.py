@@ -21,10 +21,11 @@ wl : Wavelength
 
 __author__ = 'Cyril Grima'
 
-__all__ = ['iem', 'roughness', 'utils']
+__all__ = ['iem', 'invert', 'roughness', 'utils']
 
 from Classdef import *
 
 import iem
+import invert
 import roughness
 import utils
