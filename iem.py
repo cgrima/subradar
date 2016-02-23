@@ -7,6 +7,7 @@ Note: Argument "m" is subradar.Model class
 
 __author__ = 'Cyril Grima'
 
+import numpy as np
 from numpy import abs, cos, exp, float64, inf, int, log10, pi, sin, sqrt
 from scipy.misc import factorial
 from scipy import integrate
