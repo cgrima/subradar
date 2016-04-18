@@ -106,3 +106,21 @@ def T_h(ep1, ep2, mu1, mu2, xi):
 def R(ep1, ep2, mu1, mu2, xi):
     """Unpolarized Reflection coefficient"""
     return (R_v(ep1, ep2, mu1, mu2, xi) + R_h(ep1, ep2, mu1, mu2, xi))/2.
+
+
+#---------------------
+# Footprints
+#---------------------
+
+
+def footprint_rad_beam(h, bmw):
+    """radius of the beam-limited footprint"""
+    return h*bmw
+
+def footprint_rad_pulse(h, bw):
+    """radius of the pulse-limited footprint"""
+    return 2*sqrt(h*ct.c/bw)
+
+def footprint_rad_fresnel(h, wl):
+    """radius of the Fresnel footprint"""
+    return 2*sqrt(h*wl/2)

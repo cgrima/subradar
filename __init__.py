@@ -3,9 +3,11 @@
 Variables comonly used in the package
 -------------------------------------
 
+bmw = Beamwidth angle
 bw = Bandwidth
 cl : Correlation length
 epsilon, ep : Electric permittivity
+h = Altitude
 mp : Magnetic permeability
 nRCS : Normalized Radar Cross Section
 RCS : Radar Cross Section
