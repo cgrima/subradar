@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 nan = float('nan')
 
 
-def srf2power_norminc(model, approx, gain=lambda th:1, th_max=nan,
+def _srf2power_norminc(model, approx, gain=lambda th:1, th_max=nan,
                       db=True, kind='isotropic gaussian', **kwargs):
     """Power components over circular footprint at normal incident
     from surface properties
@@ -58,6 +58,54 @@ def srf2power_norminc(model, approx, gain=lambda th:1, th_max=nan,
     if db:
         pc, pn, ratio = 10*log10(pc), 10*log10(pn), 10*log10(ratio)
     return {'pc':pc, 'pn':pn, 'ratio':ratio}
+
+
+def srf2power_norminc(model, approx, gain=lambda th:1, th_max=nan,
+                      db=True, kind='isotropic gaussian', **kwargs):
+    """Power components over circular footprint at normal incident
+    from surface properties
+
+    PARAMETERS
+    ==========
+    gain: function
+        function of the observation angle (radian) and return
+        a linear amplitude
+
+    th_max: float
+        Maximum observation angle corresponding to the edge of the footprint
+
+    **kwargs: to be passed to the model (do not include theta)
+
+    EXAMPLE
+    =======
+    In[1]: sr.invert.srf2power_norminc('iem','Small_S', th_max=0.008,
+           wf=13.78e9, ep2=1.5, sh=1.5e-3, cl=100e-3)
+    Out[1]:
+    {'pc': -23.172003557542929,
+    'pn': -36.370086693995717,
+    'ratio': 13.198083136452789}
+    """
+
+    m = import_module('subradar.' + model)
+    Scattering = getattr(m, approx)
+
+    # Coherent Signal
+    a = Scattering(th=0, **kwargs)
+    pc = a.R['nn']**2 * exp( -(2*a.wk*a.sh)**2 )
+
+    # Incoherent Signal
+    # Note: nRCS(th=0) approximation all over the footprint.
+    # That allows to get nRCS out of the integral for faster computation
+    nRCS = lambda th: Scattering(th=th, **kwargs).nRCS(kind=kind)['hh']
+    integrand = lambda th: 2* gain(th)**2 * np.arctan(th)/(th**2+1) *nRCS(th)
+    pn = integrate.quad(integrand, 0, th_max)[0]
+
+    # Output
+    ratio = pc/pn
+    if db:
+        pc, pn, ratio = 10*log10(pc), 10*log10(pn), 10*log10(ratio)
+    return {'pc':pc, 'pn':pn, 'ratio':ratio}
+
 
 
 def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=nan,
