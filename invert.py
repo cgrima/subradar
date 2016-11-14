@@ -64,21 +64,39 @@ def srf2power_norminc(model, approx, gain=lambda th:1, th_max=nan,
 def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=nan,
               th_max=nan, db=True, kind='isotropic gaussian',
               ep_range=[1.4,2.5], cl_logrange=[-1, 2], n=50, verbose=False):
-    """Surface properties from Power components [in dB]
+    """Surface properties solutions from Power components [in dB]
+
+    EXAMPLE
+    =======
+    sr.invert.power2srf_norminc('iem','Small_S', pc, pn, th_max=3/1000.,wf=wf,
+    verbose=True, cl_logrange=[5], n=50)
+
+    NOTE
+    ====
+    For large correlation length estimation, set cl_logrange to an array of
+    1 element with what you think is the cl threshold. (see example above).
     """
     pc = 10**(pc/10.)
     s = Signal(wf=wf, bw=nan, th=th_max)
 
     ep = np.linspace(ep_range[0], ep_range[1], n)
     r = utils.R(1, ep, 1, 1, s.th)
-    cl = 10**np.linspace(cl_logrange[0], cl_logrange[1], n)
+    #cl = 10**np.linspace(cl_logrange[0], cl_logrange[1], n)
 
     sh = sqrt(log(r**2/pc)) / (2*s.wk*cos(s.th))
     sh[np.isnan(sh)] = 0
 
-    cl_out = np.nan * cl
+    #cl_out = np.nan * cl
 
-    jn = n
+    # set the iterations for cl
+    if np.size(cl_logrange) is 1:
+        jn = 1
+    else:
+        jn = n
+    cl = 10**np.linspace(cl_logrange[0], cl_logrange[-1], jn)
+    cl_out = np.nan * ep
+
+    # Iterations over the field of parameters
     for i, val in enumerate(ep):
         if verbose is True:
             print('\n')
@@ -95,5 +113,8 @@ def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=nan,
                         jn = n
                     cl_out[i] = cl[j]
                     break
+            if (jn is 1) and (tmp > pn) and ~np.isinf(tmp):
+                ep, sh, cl_out = ep[i], sh[i], cl_out[i]
+                break
 
     return {'ep':ep, 'sh':sh, 'cl':cl_out}
