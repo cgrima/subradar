@@ -62,7 +62,7 @@ def srf2power_norminc(model, approx, gain=lambda th:1, th_max=nan,
 
 
 def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=nan,
-              th_max=nan, db=True, kind='isotropic gaussian',
+              th_max=.1, db=True, kind='isotropic gaussian',
               ep_range=[1.4,2.5], cl_logrange=[-1, 2], n=50, verbose=False):
     """Surface properties solutions from Power components [in dB]
 
@@ -75,6 +75,7 @@ def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=nan,
     ====
     For large correlation length estimation, set cl_logrange to an array of
     1 element with what you think is the cl threshold. (see example above).
+    Else, use an array of 2 elements to determine the range.
     """
     pc = 10**(pc/10.)
     s = Signal(wf=wf, bw=nan, th=th_max)
