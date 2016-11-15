@@ -118,4 +118,4 @@ def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=nan,
                 ep, sh, cl_out = ep[i], sh[i], cl_out[i]
                 break
 
-    return {'ep':ep, 'sh':sh, 'cl':cl_out}
+    return {'eps':ep, 'ep':ep, 'sh':sh, 'cl':cl_out}
