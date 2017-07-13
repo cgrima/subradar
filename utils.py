@@ -67,7 +67,6 @@ def epmu2n(ep, mu):
     return np.sqrt(ep*mu)
 
 
-
 def R_v(ep1, ep2, mu1, mu2, xi):
     """Vertical (parallel) reflection coeff, funct. of incident angle"""
     n1 = epmu2n(ep1, mu1)
@@ -125,3 +124,12 @@ def footprint_rad_pulse(h, bw):
 def footprint_rad_fresnel(h, wl):
     """radius of the Fresnel footprint"""
     return 2*np.sqrt(h*wl/2)
+
+
+#------
+# Misc.
+#------
+
+def geo_loss(h):
+    """Energy losses from geometric spreading"""
+    return 1/(4*np.pi*h**2)
