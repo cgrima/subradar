@@ -115,15 +115,15 @@ def R(ep1, ep2, mu1, mu2, xi):
 
 def footprint_rad_beam(h, bmw):
     """radius of the beam-limited footprint"""
-    return h*bmw
+    return h*bmw/2.
 
 def footprint_rad_pulse(h, bw):
     """radius of the pulse-limited footprint"""
-    return 2*np.sqrt(h*ct.c/bw)
+    return np.sqrt(h*ct.c/bw)
 
 def footprint_rad_fresnel(h, wl):
     """radius of the Fresnel footprint"""
-    return 2*np.sqrt(h*wl/2)
+    return np.sqrt(h*wl/2)
 
 
 #------
