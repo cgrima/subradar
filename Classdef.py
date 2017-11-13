@@ -2,9 +2,7 @@
 
 __author__ = 'Cyril Grima'
 
-import roughness
-import signal
-import utils
+from subradar import roughness, utils
 from numpy import inf
 
 nan = float('nan')

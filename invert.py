@@ -6,7 +6,8 @@ from scipy import integrate
 import numpy as np
 from numpy import cos, exp, log, log10, pi, sqrt
 from importlib import import_module
-from subradar import Fresnel, Signal, utils
+from subradar import utils
+from subradar.Classdef import Fresnel, Signal
 import matplotlib.pyplot as plt
 
 

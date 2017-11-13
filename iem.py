@@ -12,7 +12,8 @@ from numpy import abs, cos, exp, float64, inf, int, log10, pi, sin, sqrt
 from scipy.misc import factorial
 from scipy import integrate
 from mpmath import nsum
-from subradar import Fresnel, roughness, Roughness, Signal
+from subradar import roughness
+from subradar.Classdef import Fresnel, Roughness, Signal
 import scipy.constants as ct
 import sys
 
