@@ -7,13 +7,13 @@ Note: Argument "m" is subradar.Model class
 
 __author__ = 'Cyril Grima'
 
+from . import roughness
+from .Classdef import Fresnel, Roughness, Signal
 import numpy as np
 from numpy import abs, cos, exp, float64, inf, int, log10, pi, sin, sqrt
 from scipy.misc import factorial
 from scipy import integrate
 from mpmath import nsum
-from subradar import roughness
-from subradar.Classdef import Fresnel, Roughness, Signal
 import scipy.constants as ct
 import sys
 

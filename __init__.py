@@ -18,5 +18,3 @@ wf : Wave frequency
 wk : Wave number
 wl : Wavelength
 """
-
-__author__ = 'Cyril Grima'
