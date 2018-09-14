@@ -1,6 +1,7 @@
 """Various tools for electomagntism physics
 Variables comonly used in the package
 -------------------------------------
+
 bmw = Beamwidth angle
 bw = Bandwidth
 cl : Correlation length
@@ -18,3 +19,9 @@ wf : Wave frequency
 wk : Wave number
 wl : Wavelength
 """
+
+__author__ = "Cyril Grima"
+
+__all__ = ["iem", "invert", "roughness", "utils"]
+
+from . import iem, invert, roughness, utils

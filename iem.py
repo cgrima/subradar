@@ -5,8 +5,6 @@ Fung et al. [1994].
 Note: Argument "m" is subradar.Model class
 """
 
-__author__ = 'Cyril Grima'
-
 from . import roughness
 from .Classdef import Fresnel, Roughness, Signal
 import numpy as np

@@ -1,6 +1,5 @@
 """Various tools for surface desciption"""
 
-__author__ = 'Cyril Grima'
 
 from numpy import pi, exp, sin, cos, sqrt, arcsin, float64
 import matplotlib.pyplot as plt

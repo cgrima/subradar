@@ -1,7 +1,5 @@
 """Signal inversion"""
 
-__author__ = 'Cyril Grima'
-
 from . import utils
 from .Classdef import Fresnel, Signal
 from scipy import integrate
@@ -24,10 +22,8 @@ def srf2power_norminc(model, approx, gain=lambda th:1, th_max=nan,
     gain: function
         function of the observation angle (radian) and return
         a linear amplitude
-
     th_max: float
         Maximum observation angle corresponding to the edge of the footprint
-
     **kwargs: to be passed to the model (do not include theta)
 
     EXAMPLE
@@ -39,7 +35,6 @@ def srf2power_norminc(model, approx, gain=lambda th:1, th_max=nan,
     'pn': -36.370086693995717,
     'ratio': 13.198083136452789}
     """
-
     m = import_module('subradar.' + model)
     Scattering = getattr(m, approx)
 
@@ -79,7 +74,7 @@ def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=nan,
     Else, use an array of 2 elements to determine the range.
     """
     pc = 10**(pc/10.)
-    s = Signal(wf=wf, bw=nan, th=th_max)
+    s = Signal(wf=wf, wb=nan, th=th_max)
 
     ep = np.linspace(ep_range[0], ep_range[1], n)
     r = utils.R(1, ep, 1, 1, s.th)
@@ -104,8 +99,8 @@ def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=nan,
             print('\n')
         if sh[i] != 0: #if no solution for sh, do not compute
             for j in reversed(range(0, jn, 1)):
-                tmp = srf2power_norminc(model, approx, gain=gain, th_max=th_max, wf=wf,
-                      ep2=ep[i], sh=sh[i], cl=cl[j])['pn']
+                tmp = srf2power_norminc(model, approx, gain=gain, th_max=th_max, 
+                      wf=wf, ep2=ep[i], sh=sh[i], cl=cl[j])['pn']
                 if verbose is True:
                     print('[%04d - %04d] ep = %05.2f, sh= %09.6f, cl = %08.3f, pn = %05.1f'
                           % (i, j, ep[i], sh[i], cl[j], tmp))
