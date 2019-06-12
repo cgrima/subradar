@@ -5,15 +5,13 @@ Fung et al. [1994].
 Note: Argument "m" is subradar.Model class
 """
 
+import numpy as np
+from numpy import cos, exp, float64, inf, log10, sin
+from scipy.misc import factorial
+from mpmath import nsum
+
 from . import roughness
 from .Classdef import Fresnel, Roughness, Signal
-import numpy as np
-from numpy import abs, cos, exp, float64, inf, int, log10, pi, sin, sqrt
-from scipy.misc import factorial
-from scipy import integrate
-from mpmath import nsum
-import scipy.constants as ct
-import sys
 
 
 nan = float('nan')
@@ -86,7 +84,7 @@ class Small_S(Common, Signal, Fresnel, Roughness):
         def _nRCS(self, pp, n, kind):
             n = float(n)
             return self.wk**2 * exp(-2*(self.sh*self.wk_z)**2) /2 * \
-                   ( self.sh**(2*n) * abs( self.I(n)[pp] )**2 * \
+                   ( self.sh**(2*n) * np.abs( self.I(n)[pp] )**2 * \
                      roughness.spectrum(self.wk, self.sh, self.cl, self.th, \
                      n=n, kind=kind) / factorial(n) )
 
@@ -100,7 +98,7 @@ class Small_S(Common, Signal, Fresnel, Roughness):
 
         vv, hh = float64(vv), float64(hh)
 
-        if db :
+        if db:
             vv, hh = 10*log10(vv), 10*log10(hh)
 
         return {'vv':vv, 'hh':hh}
