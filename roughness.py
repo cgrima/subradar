@@ -1,15 +1,14 @@
 """Various tools for surface desciption"""
 
-
-from numpy import pi, exp, sin, cos, sqrt, arcsin, float64
-import matplotlib.pyplot as plt
-
+import numpy as np
 
 def spectrum(wk, sh, cl, th, n=1, kind='isotropic gaussian', **kwargs):
     """Surface roughness spectrum at at order n
     """
 
     if kind == 'isotropic gaussian':
-        out = float64(cl)**2/n*exp(-(wk*cl*sin(th))**2/n) /2.
+        out = np.float64(cl)**2/n*np.exp(-(wk*cl*np.sin(th))**2/n) /2.
+    else:
+        raise ValueError("Unsupported value for kind: " + kind)
 
     return out

@@ -2,15 +2,16 @@
 
 __author__ = 'Cyril Grima'
 
-from . import roughness, utils
-from numpy import inf
+import numpy as np
 
-nan = float('nan')
+from . import roughness, utils
+
+NAN = float('nan')
 
 
 class Signal(object):
     """Signal relationships"""
-    def __init__(self, wf=nan, bw=nan, th=0., bmw=nan, h=nan, **kwargs):
+    def __init__(self, wf=NAN, bw=NAN, th=0., bmw=NAN, h=NAN, **kwargs):
         self.wf = wf  # Signal central frequency [Hz]
         self.bw = bw  # Signal bandwidth [Hz]
         self.th = th  # Incident angle [rad]
@@ -51,7 +52,7 @@ class Fresnel(object):
 
 class Roughness(object):
     """Roughness relationships"""
-    def __init__(self, wf=nan, sh=0, cl=inf, **kwargs):
+    def __init__(self, wf=NAN, sh=0, cl=np.inf, **kwargs):
         self.wf = wf  # Signal central frequency [Hz]
         self.sh = sh  # RMS  height [m]
         self.cl = cl  # Correlation Length [m]
