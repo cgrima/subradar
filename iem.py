@@ -7,7 +7,7 @@ Note: Argument "m" is subradar.Model class
 
 import numpy as np
 from numpy import cos, exp, float64, inf, log10, sin
-from scipy.misc import factorial
+from scipy.special import factorial
 from mpmath import nsum
 
 from . import roughness
