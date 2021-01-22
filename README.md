@@ -3,6 +3,10 @@ Presentation
 
 Python Library for Electromagnetic physics applied to subsurface radars
 
+Installation
+===
+
+`pip install subradar`
 
 Keywords
 ===
