@@ -4,7 +4,7 @@ __author__ = 'Cyril Grima'
 
 import numpy as np
 
-from . import roughness, utils
+from . import roughness, surface, utils
 
 NAN = float('nan')
 
