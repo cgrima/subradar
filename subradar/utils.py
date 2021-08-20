@@ -169,6 +169,7 @@ def gcc(x, y, weight='standard', **kwargs):
     Pyy = Y * np.conj(Y)
     Pxy = X * np.conj(Y)
     
+    Cxy = ch
     if weight == 'standard':
         W = 1.
     if weight == 'wiener':
