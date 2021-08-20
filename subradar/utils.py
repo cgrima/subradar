@@ -3,6 +3,8 @@
 #from numpy import arcsin, cos, pi, sin, sqrt
 import numpy as np
 import scipy.constants as ct
+import scipy.signal
+import scipy.fftpack
 
 
 #-------------------
@@ -118,3 +120,79 @@ def footprint_rad_fresnel(h, wl):
 def geo_loss(h):
     """Energy losses from geometric spreading"""
     return 1/(4*np.pi*h**2)
+
+
+#-------
+# Others
+#-------
+
+#def coherence(x, y, n=None):
+#    if n is None:
+#        n = x.size
+#    _, Cxy = scipy.signal.coherence(x, y, nfft=n)
+#    return Cxy
+
+def gcc(x, y, weight='standard', **kwargs):
+    """Generalized Cross-correlation between two vectors
+    
+    Arguments
+    ---------
+    x: vector array
+        signal 1
+    y: vector array
+        signal 2
+    weight: string
+        filter to be applied on both signals
+        
+    Output
+    ------
+    tau: integer
+        time delay
+    val: float
+        Maximum value of the cross-corelation
+    cc: array
+        Correlation Coefficient
+    ch: array
+        Magnitude squared coherence of x and y.
+    """
+    n_ini = int(x.size)
+    _, ch = scipy.signal.coherence(x, y, nfft=n_ini)
+    x, y = np.abs(x), np.abs(y)
+    padx = np.zeros(x.size)
+    pady = np.zeros(y.size)
+    x = np.hstack([x,x])
+    y = np.hstack([y,y])
+    n = x.size
+    X = scipy.fftpack.fft(x)
+    Y = scipy.fftpack.fft(y)
+    Pxx = X * np.conj(X)
+    Pyy = Y * np.conj(Y)
+    Pxy = X * np.conj(Y)
+    
+    if weight == 'standard':
+        W = 1.
+    if weight == 'wiener':
+        W = 1./Cxy
+    elif weight == 'roth':
+        W = 1./Pxx
+    elif weight == 'scot':
+        W = 1./np.sqrt(Pxx * Pyy)
+    elif weight == 'phat':
+        W = 1./np.abs(Pxy)
+    elif weight == 'ml':
+        K = Cxy / (1.-Cxy)
+        W =  K / np.abs(Pxy)
+
+    # Correlation Coefficient
+    cc = np.abs(scipy.fftpack.ifft(Pxy * W ))#[1:]
+    n_ini = int(n/2)
+    cc = cc[n_ini:n_ini+n]
+    cc = np.roll(cc, n_ini)
+    
+    # TDE
+    tau = np.abs(cc).argmax()
+    tau = np.mod(tau, n_ini).astype(int)
+    tau = tau if tau <= n_ini/2 else tau-n_ini
+    val = np.abs(cc).max()
+        
+    return {'tau':tau, 'val':val, 'cc':cc, 'ch':ch}
