@@ -24,9 +24,21 @@ class Common(Fresnel):
 
     def f(self):
         """f_pp terms"""
+        
         return {'vv': 2*self.R['vv']/cos(self.th),
                 'hh':-2*self.R['hh']/cos(self.th)}
 
+    def ft(self):
+        """f_ppt terms
+        !! FOR NORMAL INCIDENCE ONLY !!
+        """
+        
+        nr = np.sqrt(self.mu/self.ep)
+        
+        vv = -(1-self.R['vv']) - (1+self.R['vv'])*nr #eq 4D.1
+        hh = +(1+self.R['hh']) + (1-self.R['hh'])*nr #eq 4D.2
+        
+        return {'vv': vv, 'hh': hh}
 
 
 class Large_S(Signal, Fresnel):
@@ -48,7 +60,7 @@ class Small_S(Common, Signal, Fresnel, Roughness):
         Fresnel.__init__(self, **kwargs)
         Signal.__init__(self, **kwargs)
         Common.__init__(self, **kwargs)
-
+        
 
     def F_sum(self):
         """F_pp(-)+F_pp(+) terms"""
@@ -67,34 +79,126 @@ class Small_S(Common, Signal, Fresnel, Roughness):
         return {'vv':vv, 'hh':hh}
 
 
+    def Ft(self):
+        """Ft terms
+        !! FOR NORMAL INCIDENCE ONLY !!
+        """
+
+        k = self.wk
+        kt = self.n2*self.wk
+        R = self.R['nn']
+        er = self.ep
+        mr = self.mu
+        nr = np.sqrt(mr/er)
+
+        s = 0
+        st = 0
+        cs = 1
+        cst = 1
+        sf = 0
+        csf = -1
+        
+        sq = np.sqrt(self.mu*self.ep)
+        rem = sq
+        nr = np.sqrt(self.mu/self.ep)
+        a1 = (st*s-rem*csf)/(sq*cst)
+        a2 = s*(st-s*csf/rem)/cst
+        Tv = 1+self.R['vv']
+        Tvm = 1-self.R['vv']
+        Th = 1+self.R['hh']
+        Thm = 1-self.R['hh']
+        Tp = 1+self.R['nn']
+        Tm = 1-self.R['nn']
+        R = (self.R['vv']-self.R['hh'])/2
+
+        #vv = - (cs*Tvm-sq*Tv/self.ep) * (Tv*csf+Tvm*a1) \
+        #     - (Tvm**2-Tv*Tvm*cs/sq)*a2# eq 4D.41
+        #hh = (cs*Thm-sq*Th/self.mu) * (Th*csf+Thm*a1)*nr \
+        #     + (Thm**2-Th*Thm*cs/sq)*a2*nr # eq 4D.42
+        
+        #vv = -(Tvm-Tv*nr)*(-Tv+Tvm)
+        #hh =  (Thm-Th/nr)*(-Th-Thm)*nr
+        
+        # Chris derivation (2022/09/12): 
+        
+        vv = -k*(
+             -(1-R)*( (1+R)/np.sqrt(k**2) + (-1+R)*er/np.sqrt(kt**2) )*nr
+             +(1+R)*((-1+R)/np.sqrt(k**2) + ( 1+R)*mr/np.sqrt(kt**2) )
+             )
+        
+        hh = -k*(
+              (1+R)*( (1-R)/np.sqrt(k**2) - ( 1+R)*er/np.sqrt(kt**2) )*nr
+             -(1-R)*(-(1+R)/np.sqrt(k**2) - (-1+R)*mr/np.sqrt(kt**2) )
+             )
+        
+        
+        return {'vv':vv, 'hh':hh}
+
+
     def I(self, n):
         """I_pp terms"""
 
         def _I(self, pp, n):
-            return (2*self.wk_z)**n * self.f()[pp] * exp(-(self.sh*self.wk_z)**2) \
-                    + self.wk_z**n * self.F_sum()[pp] /2
+            return (2*self.wk_z)**n * self.f()[pp] *\
+                   exp(-(self.sh*self.wk_z)**2) \
+                   + self.wk_z**n * self.F_sum()[pp] /2
 
         return {'vv':_I(self, 'vv', n),
                 'hh':_I(self, 'hh', n)}
 
 
-    def nRCS(self, n='richardson+shanks', kind='isotropic gaussian', db=False):
+    def It(self, n):
+        """I_ppt terms
+        !! FOR NORMAL INCIDENCE !!
+        """
+
+        def _It(self, pp, n):
+        
+            kz = self.wk_z
+            ktz = self.n2*self.wk_z
+            
+            #return (1+self.n2)**n * self.wk_z**n * self.ft()[pp] *\
+            #       exp(-self.n2*self.sh**2*self.wk_z**2) \
+            #       + (1+self.n2**n) * self.wk_z**n * self.Ft()[pp]
+            
+            return (kz+ktz)**n * self.ft()[pp] *\
+                   exp(-self.sh**2*kz*ktz) \
+                   + (ktz**n*self.Ft()[pp] + kz**n*self.Ft()[pp] )/2
+
+        return {'vv':_It(self, 'vv', n),
+                'hh':_It(self, 'hh', n)
+                }
+
+
+    def nRCS(self, n='richardson+shanks', kind='isotropic gaussian', db=False,
+            transmission=False):
         """Normalized Radar cross-section"""
 
-        def _nRCS(self, pp, n, kind):
+        def _nRCS(self, pp, n, kind, transmission):
             n = float(n)
-            return self.wk**2 * exp(-2*(self.sh*self.wk_z)**2) /2 * \
-                   ( self.sh**(2*n) * np.abs( self.I(n)[pp] )**2 * \
-                     roughness.spectrum(self.wk, self.sh, self.cl, self.th, \
-                     n=n, kind=kind) / factorial(n) )
+            
+            if not transmission:
+                out = self.wk**2 * exp(-2*(self.sh*self.wk_z)**2) /2 * \
+                      ( self.sh**(2*n) * np.abs( self.I(n)[pp] )**2 * \
+                      roughness.spectrum(self.wk, self.sh, self.cl, self.th, \
+                      n=n, kind=kind) / factorial(n) )
+                      
+            elif transmission:
+                out = self.n2**2 * self.wk**2 * \
+                      exp(-(1+self.n2**2)*self.sh**2*self.wk_z**2) /2 * \
+                      ( self.sh**(2*n) * np.abs( self.It(n)[pp] )**2 * \
+                      roughness.spectrum(self.wk, self.sh, self.cl, self.th, \
+                      n=n, kind=kind) / factorial(n) )
+                      
+            return out
 
         if type(n) is not str:
-            vv = nsum(lambda x: _nRCS(self, 'vv', x, kind), [1,n] )
-            hh = nsum(lambda x: _nRCS(self, 'hh', x, kind), [1,n] )
+            vv = nsum(lambda x: _nRCS(self, 'vv', x, kind, transmission), [1,n] )
+            hh = nsum(lambda x: _nRCS(self, 'hh', x, kind, transmission), [1,n] )
 
         if type(n) is str:
-            vv = nsum(lambda x: _nRCS(self, 'vv', x, kind), [1,inf], method=n)
-            hh = nsum(lambda x: _nRCS(self, 'hh', x, kind), [1,inf], method=n)
+            vv = nsum(lambda x: _nRCS(self, 'vv', x, kind, transmission), [1,inf], method=n)
+            hh = nsum(lambda x: _nRCS(self, 'hh', x, kind, transmission), [1,inf], method=n)
 
         vv, hh = float64(vv), float64(hh)
 
