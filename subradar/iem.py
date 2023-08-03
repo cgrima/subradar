@@ -24,7 +24,7 @@ class Common(Fresnel):
 
     def f(self):
         """f_pp terms"""
-        
+
         return {'vv': 2*self.R['vv']/cos(self.th),
                 'hh':-2*self.R['hh']/cos(self.th)}
 
@@ -32,12 +32,12 @@ class Common(Fresnel):
         """f_ppt terms
         !! FOR NORMAL INCIDENCE ONLY !!
         """
-        
+
         nr = np.sqrt(self.mu/self.ep)
-        
+
         vv = -(1-self.R['vv']) - (1+self.R['vv'])*nr #eq 4D.1
         hh = +(1+self.R['hh']) + (1-self.R['hh'])*nr #eq 4D.2
-        
+
         return {'vv': vv, 'hh': hh}
 
 
@@ -60,7 +60,7 @@ class Small_S(Common, Signal, Fresnel, Roughness):
         Fresnel.__init__(self, **kwargs)
         Signal.__init__(self, **kwargs)
         Common.__init__(self, **kwargs)
-        
+
 
     def F_sum(self):
         """F_pp(-)+F_pp(+) terms"""
@@ -97,7 +97,7 @@ class Small_S(Common, Signal, Fresnel, Roughness):
         cst = 1
         sf = 0
         csf = -1
-        
+
         sq = np.sqrt(self.mu*self.ep)
         rem = sq
         nr = np.sqrt(self.mu/self.ep)
@@ -115,23 +115,23 @@ class Small_S(Common, Signal, Fresnel, Roughness):
         #     - (Tvm**2-Tv*Tvm*cs/sq)*a2# eq 4D.41
         #hh = (cs*Thm-sq*Th/self.mu) * (Th*csf+Thm*a1)*nr \
         #     + (Thm**2-Th*Thm*cs/sq)*a2*nr # eq 4D.42
-        
+
         #vv = -(Tvm-Tv*nr)*(-Tv+Tvm)
         #hh =  (Thm-Th/nr)*(-Th-Thm)*nr
-        
-        # Chris derivation (2022/09/12): 
-        
+
+        # Chris derivation (2022/09/12):
+
         vv = -k*(
              -(1-R)*( (1+R)/np.sqrt(k**2) + (-1+R)*er/np.sqrt(kt**2) )*nr
              +(1+R)*((-1+R)/np.sqrt(k**2) + ( 1+R)*mr/np.sqrt(kt**2) )
              )
-        
+
         hh = -k*(
               (1+R)*( (1-R)/np.sqrt(k**2) - ( 1+R)*er/np.sqrt(kt**2) )*nr
              -(1-R)*(-(1+R)/np.sqrt(k**2) - (-1+R)*mr/np.sqrt(kt**2) )
              )
-        
-        
+
+
         return {'vv':vv, 'hh':hh}
 
 
@@ -153,14 +153,14 @@ class Small_S(Common, Signal, Fresnel, Roughness):
         """
 
         def _It(self, pp, n):
-        
+
             kz = self.wk_z
             ktz = self.n2*self.wk_z
-            
+
             #return (1+self.n2)**n * self.wk_z**n * self.ft()[pp] *\
             #       exp(-self.n2*self.sh**2*self.wk_z**2) \
             #       + (1+self.n2**n) * self.wk_z**n * self.Ft()[pp]
-            
+
             return (kz+ktz)**n * self.ft()[pp] *\
                    exp(-self.sh**2*kz*ktz) \
                    + (ktz**n*self.Ft()[pp] + kz**n*self.Ft()[pp] )/2
@@ -176,20 +176,20 @@ class Small_S(Common, Signal, Fresnel, Roughness):
 
         def _nRCS(self, pp, n, kind, transmission):
             n = float(n)
-            
+
             if not transmission:
                 out = self.wk**2 * exp(-2*(self.sh*self.wk_z)**2) /2 * \
                       ( self.sh**(2*n) * np.abs( self.I(n)[pp] )**2 * \
                       roughness.spectrum(self.wk, self.sh, self.cl, self.th, \
                       n=n, kind=kind) / factorial(n) )
-                      
+
             elif transmission:
                 out = self.n2**2 * self.wk**2 * \
                       exp(-(1+self.n2**2)*self.sh**2*self.wk_z**2) /2 * \
                       ( self.sh**(2*n) * np.abs( self.It(n)[pp] )**2 * \
                       roughness.spectrum(self.wk, self.sh, self.cl, self.th, \
                       n=n, kind=kind) / factorial(n) )
-                      
+
             return out
 
         if type(n) is not str:

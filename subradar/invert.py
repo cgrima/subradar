@@ -99,7 +99,7 @@ def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=nan,
             print('\n')
         if sh[i] != 0: #if no solution for sh, do not compute
             for j in reversed(range(0, jn, 1)):
-                tmp = srf2power_norminc(model, approx, gain=gain, th_max=th_max, 
+                tmp = srf2power_norminc(model, approx, gain=gain, th_max=th_max,
                       wf=wf, ep2=ep[i], sh=sh[i], cl=cl[j])['pn']
                 if verbose is True:
                     print('[%04d - %04d] ep = %05.2f, sh= %09.6f, cl = %08.3f, pn = %05.1f'
