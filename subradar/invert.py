@@ -59,13 +59,13 @@ def srf2power_norminc(model, approx, gain=lambda th:1, th_max=nan,
 
 def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=nan,
               th_max=.1, db=True, kind='isotropic gaussian',
-              ep_range=[1.4,2.5], cl_logrange=[-1, 2], n=50, verbose=False):
+              ep_range=(1.4,2.5), cl_logrange=(-1, 2), n=50, verbose=False):
     """Surface properties solutions from Power components [in dB]
 
     EXAMPLE
     =======
     sr.invert.power2srf_norminc('iem','Small_S', pc, pn, th_max=3/1000.,wf=wf,
-    verbose=True, cl_logrange=[5], n=50)
+    verbose=True, cl_logrange=(5,), n=50)
 
     NOTE
     ====

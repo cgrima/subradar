@@ -7,7 +7,7 @@ from . import utils
 import copy
 
 
-def detector(rdg, y0=[], winsize=100, method='grima2012', axis=0, **kwargs):
+def detector(rdg, y0=None, winsize=100, method='grima2012', axis=0, **kwargs):
     """Surface detection with the choosen method
 
     Input
@@ -15,13 +15,13 @@ def detector(rdg, y0=[], winsize=100, method='grima2012', axis=0, **kwargs):
     rdg: 2d-array
         radargram.
 
-    y0: array
+    y0: 1d-array
         Initial estimation for the location of the surface.
         Optional.
 
     winsize: float
         Size of the window around y0 to look for the surface.
-        Activated only if y0 > 0.
+        Activated only if y0 is a nonempty array.
 
     method: string
         method to use for surface detection.
@@ -47,7 +47,7 @@ def detector(rdg, y0=[], winsize=100, method='grima2012', axis=0, **kwargs):
         signal = rdg[xi,:]
 
         #index vector
-        if len(y0) > 0:
+        if y0 is not None and len(y0) > 0:
             idx = np.arange(winsize)+y0[xi]-winsize/2.
         else:
             idx = np.arange(ysize)
@@ -61,7 +61,7 @@ def detector(rdg, y0=[], winsize=100, method='grima2012', axis=0, **kwargs):
     return y
 
 
-def mouginot2010(signal, idx=[], period=3, window=30, **kwargs):
+def mouginot2010(signal, idx=(), period=3, window=30, **kwargs):
     """Surface detection using [Mouginot et al. 2010]
     
     Parameters
@@ -107,7 +107,7 @@ def mouginot2010(signal, idx=[], period=3, window=30, **kwargs):
     return y, c
 
 
-def grima2012(signal, idx=[], **kwargs):
+def grima2012(signal, idx=(), **kwargs):
     """Surface detection from [Grima et al. 2012]
     
     Parameters
