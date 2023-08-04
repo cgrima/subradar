@@ -1,4 +1,4 @@
-"""Various tools fpr surface detection"""
+"""Various tools for surface detection"""
 
 import copy
 
@@ -40,23 +40,23 @@ def detector(rdg, y0=None, winsize=100, method='grima2012', axis=0, **kwargs):
         rdg = np.rot90(rdg)
 
     xsize, ysize = rdg.shape
-    y = np.zeros(xsize)
+    y = np.empty(xsize)
+
+    detectors = {
+        'grima2012': grima2012,
+        'mouginot2010': mouginot2010,
+    }
+    fdetector = detectors[method]
 
     # Detection
-    for xi in np.arange(xsize):
-        signal = rdg[xi,:]
-
+    for xi in range(xsize):
         #index vector
         if y0 is not None and len(y0) > 0:
             idx = np.arange(winsize)+y0[xi]-winsize/2.
         else:
             idx = np.arange(ysize)
 
-        # Method selection
-        if method == 'grima2012':
-            y[xi], c = grima2012(signal, idx=idx, **kwargs)
-        if method == 'mouginot2010':
-            y[xi], c = mouginot2010(signal, idx=idx, **kwargs)
+        y[xi], _ = fdetector(rdg[xi, :], idx=idx, **kwargs)
 
     return y
 
