@@ -26,7 +26,7 @@ def detector(rdg, y0=None, winsize=100, method='grima2012', axis=0, **kwargs):
         method to use for surface detection.
 
     axis: 0 or 1
-        Long-time axis.
+        Indicate which axis is long-time (slow-time) axis. default=0
 
     Output
     ------
@@ -152,15 +152,13 @@ def gcc(rdg, tau_threshold=2, **kwargs):
     ----------
     rdg: 2d-array
         radargram
-        TODO: which axis is fast time and slow time?
+        axis 0 is slow time, axis 1 is fast time
 
     Return
     ------
     """
     #---------------
     # Initialization
-    # This is a little weird
-    # TODO: yn can be a normal python range, and zeros can be empty
     xsize, ysize = rdg.shape
     yn = list(range(ysize))
     tau = np.empty(ysize, dtype=int)
@@ -240,6 +238,6 @@ def gcc(rdg, tau_threshold=2, **kwargs):
     y = y0 + offset2
     del rdg3
 
-
+    # TODO: remove yn?  do you really need it?
     return {'tau':tau.astype(int), 'val':val, 'cc':cc, 'ok':ok, 'yn':yn,
     'offset':offset, 'offset2':offset2, 'y':y}

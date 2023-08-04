@@ -4,6 +4,7 @@
 import numpy as np
 import scipy.constants as ct
 import scipy.signal
+# TODO: upgrade to use scipy.fft since scipy.fftpack is legacy as of scipy 1.5.3
 import scipy.fftpack
 
 
@@ -158,8 +159,8 @@ def gcc(x, y, weight='standard', **kwargs):
     n_ini = int(x.size)
     _, ch = scipy.signal.coherence(x, y, nfft=n_ini)
     x, y = np.abs(x), np.abs(y)
-    padx = np.zeros(x.size)
-    pady = np.zeros(y.size)
+    #padx = np.zeros(x.size)
+    #pady = np.zeros(y.size)
     x = np.hstack([x,x])
     y = np.hstack([y,y])
     n = x.size
@@ -172,7 +173,7 @@ def gcc(x, y, weight='standard', **kwargs):
     Cxy = ch
     if weight == 'standard':
         W = 1.
-    if weight == 'wiener':
+    elif weight == 'wiener':
         W = 1./Cxy
     elif weight == 'roth':
         W = 1./Pxx
@@ -183,6 +184,8 @@ def gcc(x, y, weight='standard', **kwargs):
     elif weight == 'ml':
         K = Cxy / (1.-Cxy)
         W =  K / np.abs(Pxy)
+    else:
+        raise ValueError("Unknown weight '%s'" % weight)
 
     # Correlation Coefficient
     cc = np.abs(scipy.fftpack.ifft(Pxy * W ))#[1:]
@@ -195,5 +198,6 @@ def gcc(x, y, weight='standard', **kwargs):
     tau = np.mod(tau, n_ini).astype(int)
     tau = tau if tau <= n_ini/2 else tau-n_ini
     val = np.abs(cc).max()
-
+    
+    # TODO: this would be somewhat quicker as a namedtuple
     return {'tau':tau, 'val':val, 'cc':cc, 'ch':ch}

@@ -87,7 +87,7 @@ def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=nan,
     #cl_out = np.nan * cl
 
     # set the iterations for cl
-    if np.size(cl_logrange) == 1:
+    if len(cl_logrange) == 1:
         jn = 1
     else:
         jn = n
