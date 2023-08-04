@@ -194,7 +194,7 @@ class Small_S(Common, Signal, Fresnel, Roughness):
             vv = nsum(lambda x: _nRCS(self, 'vv', x, kind, transmission), [1,n] )
             hh = nsum(lambda x: _nRCS(self, 'hh', x, kind, transmission), [1,n] )
 
-        if not(isinstance(n, str):
+        if not isinstance(n, str):
             vv = nsum(lambda x: _nRCS(self, 'vv', x, kind, transmission), [1,inf], method=n)
             hh = nsum(lambda x: _nRCS(self, 'hh', x, kind, transmission), [1,inf], method=n)
 
