@@ -4,8 +4,7 @@
 import numpy as np
 import scipy.constants as ct
 import scipy.signal
-# TODO: upgrade to use scipy.fft since scipy.fftpack is legacy as of scipy 1.5.3
-import scipy.fftpack
+import scipy.fft
 
 
 #-------------------
@@ -164,8 +163,8 @@ def gcc(x, y, weight='standard', **kwargs):
     x = np.hstack([x,x])
     y = np.hstack([y,y])
     n = x.size
-    X = scipy.fftpack.fft(x)
-    Y = scipy.fftpack.fft(y)
+    X = scipy.fft.fft(x)
+    Y = scipy.fft.fft(y)
     Pxx = X * np.conj(X)
     Pyy = Y * np.conj(Y)
     Pxy = X * np.conj(Y)
@@ -188,7 +187,7 @@ def gcc(x, y, weight='standard', **kwargs):
         raise ValueError("Unknown weight '%s'" % weight)
 
     # Correlation Coefficient
-    cc = np.abs(scipy.fftpack.ifft(Pxy * W ))#[1:]
+    cc = np.abs(scipy.fft.ifft(Pxy * W ))#[1:]
     n_ini = int(n/2)
     cc = cc[n_ini:n_ini+n]
     cc = np.roll(cc, n_ini)
