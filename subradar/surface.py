@@ -1,7 +1,5 @@
 """Various tools for surface detection"""
 
-import copy
-
 import numpy as np
 import pandas as pd
 import scipy.signal
@@ -154,32 +152,35 @@ def gcc(rdg, tau_threshold=2, **kwargs):
     ----------
     rdg: 2d-array
         radargram
+        TODO: which axis is fast time and slow time?
 
     Return
     ------
     """
     #---------------
     # Initialization
-
-    yn = np.arange(rdg.shape[1])
-    tau = np.zeros(yn.size, dtype=int)
-    val = np.zeros(yn.size)
-    cc = np.abs(rdg)*0
-    ch = np.abs(rdg)*0
-    offset = np.zeros(yn.size, dtype=int)
+    # This is a little weird
+    # TODO: yn can be a normal python range, and zeros can be empty
+    xsize, ysize = rdg.shape
+    yn = list(range(ysize))
+    tau = np.empty(ysize, dtype=int)
+    val = np.empty(ysize)
+    cc = np.empty_like(rdg) #np.abs(rdg)*0
+    #ch = np.empty_like(rdg) #np.abs(rdg)*0
+    #offset = np.empty(ysize, dtype=int)
 
     #-------------------------
     # GCC applied on radargram
 
     # All records except last
-    for i in yn[:-1]:
-        x, y = rdg[:, i], rdg[:, i+1]
-        _ = utils.gcc(x, y, **kwargs)
+    for i in range(ysize-1):
+        _ = utils.gcc(rdg[:, i], rdg[:, i+1], **kwargs)
         tau[i] = _['tau']
         val[i] = _['val']
         cc[:,i] = _['cc']
         #ch[:,i] = _['ch']
 
+    # Question: can we reuse the last value calculated?
     # Last record
     _ = utils.gcc(rdg[:, i], rdg[:, i-1], **kwargs)
     tau[-1] = _['tau']
@@ -195,18 +196,18 @@ def gcc(rdg, tau_threshold=2, **kwargs):
     #----------------------------------------
     # Vertical offset that correponds to tau
 
-    offset = [np.sum(tau[:i]) for i in yn]
-    offset = np.array(offset)
+    offset = np.cumsum(tau) # tau is an int, so offset should be, too
 
 
     #-------------------
     # Corrected offsets
 
     #Radargram rolled with offset
-    rdg2 = copy.deepcopy(rdg)
-    for i in yn:
+    rdg2 = np.empty_like(rdg)
+    for i in range(ysize):
         rdg2[:,i] = np.roll(rdg[:,i], offset[i])
 
+    # TODO: does this really need to be a nested function?
     # Radargram is divided by chunks that are bounded where ok=0
     def _data_chunks(data, stepsize=1):
         data_id = np.arange(data.size)*data
@@ -222,18 +223,18 @@ def gcc(rdg, tau_threshold=2, **kwargs):
     chunk_cumsum_argmaxs = [np.argmax(chunk_cumsum) for chunk_cumsum in chunk_cumsums]
 
     # Chunks are aligned for their average surface echo coordinate to match
-    offset2 = copy.deepcopy(offset)
+    offset2 = np.empty_like(offset)
     for i, chunk in enumerate(chunks):
         offset2[chunk] = offset[chunk] - chunk_cumsum_argmaxs[i] + chunk_cumsum_argmaxs[0]
 
     del rdg2
-
+    # NB: if you're doing a del, you should probably make this a function
 
     #-------------------------------
     # Coordinate of the surface echo
 
-    rdg3 = copy.deepcopy(rdg)
-    for i in yn:
+    rdg3 = np.empty_like(rdg)
+    for i in range(ysize):
         rdg3[:,i] = np.roll(rdg[:,i], offset2[i])
     y0 = np.argmax( np.abs(rdg3.sum(axis=1)) )
     y = y0 + offset2
