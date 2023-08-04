@@ -37,7 +37,7 @@ def detector(rdg, y0=None, winsize=100, method='grima2012', axis=0, **kwargs):
 
     """
     if axis == 1:
-        rdg = np.rot90(rdg)
+        rdg = np.transpose(rdg)
 
     xsize, ysize = rdg.shape
     y = np.empty(xsize)
