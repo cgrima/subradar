@@ -189,10 +189,7 @@ def gcc(rdg, tau_threshold=2, **kwargs):
 
     # Quality flag when tau gradient higher than dtau_threshold
     #dtau = np.roll( np.gradient( np.abs(tau)) ,-1)
-    where_bad = np.where(np.abs(tau) > tau_threshold)[0]
-    #where_bad = np.intersect1d(np.where(np.abs(dtau) > dtau_threshold)[0], np.where(val < np.median(val))[0])
-    ok =np.zeros(yn.size)+1
-    ok[where_bad] = 0
+    ok = np.abs(tau) <= tau_threshold
 
 
     #----------------------------------------
