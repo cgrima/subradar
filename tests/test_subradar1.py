@@ -90,20 +90,48 @@ class TestSurface(unittest.TestCase):
     def setUp(self):
         self.rng = np.random.default_rng(seed=0xbeef)
         shape = (1000, 800)
-        self.rdg = make_radargram(shape, 200, walkstd=2,
+        self.rdg = 0.01 + make_radargram(shape, 200, walkstd=2,
                                   srfampl=100, bgampl=0.1, rng=self.rng)
 
-    def test_detect_grima(self):
-        x = sr.surface.detector(self.rdg, method='grima2012')
-        self.assertEqual(self.rdg.shape[0], len(x))
+        self.rdg_noise = 0.01 + np.random.normal(0.0, 0.1, size=shape)
 
-    def test_detect_mouginot(self):
-        x = sr.surface.detector(self.rdg, method='mouginot2010')
-        self.assertEqual(self.rdg.shape[0], len(x))
+    def test_detect_estimate(self):
+        """ Test detection using an initial estimate (a good one and a bad one)
+        """
+        for method in ('grima2012', 'mouginot2010'):
+            for y0 in (200, 500):
+                with self.subTest(method=method, y0=y0):
+                    y0arr = np.full(self.rdg.shape[0:1], y0)
+                    x = sr.surface.detector(self.rdg, y0=y0arr, method=method)
+                    self.assertEqual(self.rdg.shape[0], len(x))
+
+
+    def test_detect_method(self):
+        for method in ('grima2012', 'mouginot2010'):
+            with self.subTest(method=method):
+                x = sr.surface.detector(self.rdg, method=method)
+                self.assertEqual(self.rdg.shape[0], len(x))
+
+    def test_zeroes(self):
+        """ Test with a radargram that is all zeros """
+        rdg = np.zeros_like(self.rdg)
+        for method in ('grima2012', 'mouginot2010'):
+            with self.subTest(method=method):
+                x = sr.surface.detector(rdg, method=method)
+                self.assertEqual(rdg.shape[0], len(x))
+
+    def test_nosurface(self):
+        """ Test with a radargram with no surface in it """
+        for method in ('grima2012', 'mouginot2010'):
+            with self.subTest(method=method):
+                x = sr.surface.detector(self.rdg_noise, method=method)
+                self.assertEqual(self.rdg_noise.shape[0], len(x))
+
 
     def test_transpose(self):
         rdg = self.rdg.T.copy()
         x = sr.surface.detector(rdg, axis=1)
+
 
     def test_gcc(self):
         for method in 'standard wiener roth scot phat ml'.split():
@@ -129,27 +157,26 @@ class TestUtils(unittest.TestCase):
         h = np.arange(1, 1000, 0.5)
         y = sr.utils.geo_loss(h)
 
-    def test_funcs(self):
+    def test_funcs1(self):
+        x = np.arange(-2*np.pi, 2*np.pi, 0.01)
+        y = sr.utils.theta_t2i(x, 1.0, 1.0)
+        y = sr.utils.theta_t2i(x, 1.5, 0.5)
+    def test_funcs2(self):
         x = np.arange(-np.pi, np.pi, 0.01)
-        y = sr.utils.theta_t2i(x, 0.5, 1.5)
         y = sr.utils.wl2wk(x)
         y = sr.utils.wl2wf(x)
         y = sr.utils.deg2rad(sr.utils.rad2deg(x))
         
 
 def main():
-    rdg = make_radargram((10, 10), 200, walkstd=2,
+    _ = make_radargram((10, 10), 200, walkstd=2,
                          srfampl=100, bgampl=0.1, rng=None)
 
-
     unittest.main()
-
     #fig, ax = plt. subplots(2, 1, samex=True)
     #ax[0].imshow(rdg.T)
     #ax[1].plot(x)
     #plt.show()
 
-
-    
 if __name__ == "__main__":
     main()
