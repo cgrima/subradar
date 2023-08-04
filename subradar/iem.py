@@ -43,13 +43,11 @@ class Common(Fresnel):
 
 class Large_S(Signal, Fresnel):
     """Large roughness single-scatter approximation [sec. 5.5]"""
-    pass
 
 
 
 class Large_M(Signal, Fresnel):
     """Large roughness multiple-scatter approximation [sec. 5.5]"""
-    pass
 
 
 
@@ -192,11 +190,11 @@ class Small_S(Common, Signal, Fresnel, Roughness):
 
             return out
 
-        if type(n) is not str:
+        if not isinstance(n, str):
             vv = nsum(lambda x: _nRCS(self, 'vv', x, kind, transmission), [1,n] )
             hh = nsum(lambda x: _nRCS(self, 'hh', x, kind, transmission), [1,n] )
 
-        if type(n) is str:
+        if not(isinstance(n, str):
             vv = nsum(lambda x: _nRCS(self, 'vv', x, kind, transmission), [1,inf], method=n)
             hh = nsum(lambda x: _nRCS(self, 'hh', x, kind, transmission), [1,inf], method=n)
 
@@ -211,4 +209,3 @@ class Small_S(Common, Signal, Fresnel, Roughness):
 
 class Small_M(Signal, Fresnel):
     """Small-to-moderate roughness multiple-scatter approximation [sec. 5.5]"""
-    pass

@@ -1,14 +1,15 @@
 """Various tools fpr surface detection"""
 
+import copy
+
 import numpy as np
 import pandas as pd
 import scipy.signal
 from . import utils
-import copy
 
 
 def detector(rdg, y0=None, winsize=100, method='grima2012', axis=0, **kwargs):
-    """Surface detection with the choosen method
+    """Surface detection with the chosen method
 
     Input
     -----
@@ -38,8 +39,7 @@ def detector(rdg, y0=None, winsize=100, method='grima2012', axis=0, **kwargs):
     if axis == 1:
         rdg = np.rot90(rdg)
 
-    xsize = rdg.shape[0]
-    ysize = rdg.shape[1]
+    xsize, ysize = rdg.shape
     y = np.zeros(xsize)
 
     # Detection
@@ -196,7 +196,7 @@ def gcc(rdg, tau_threshold=2, **kwargs):
 
 
     #----------------------------------------
-    # Vertical offset that correponsds to tau
+    # Vertical offset that correponds to tau
 
     offset = [np.sum(tau[:i]) for i in yn]
     offset = np.array(offset)

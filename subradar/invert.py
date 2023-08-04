@@ -1,12 +1,13 @@
 """Signal inversion"""
 
-from . import utils
-from .Classdef import Fresnel, Signal
+from importlib import import_module
 from scipy import integrate
 import numpy as np
 from numpy import cos, exp, log, log10, pi, sqrt
-from importlib import import_module
 import matplotlib.pyplot as plt
+
+from . import utils
+from .Classdef import Fresnel, Signal
 
 
 nan = float('nan')
