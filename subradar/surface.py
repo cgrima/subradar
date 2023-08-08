@@ -133,8 +133,9 @@ def grima2012(signal, idx=(), **kwargs):
         idx = np.array(idx).astype(int) # make idx an integer array
 
     # Estimator calculation
-    derivative = np.roll(np.gradient(signal[idx]), 2)
-    c = signal[idx]*derivative
+    s1 = signal[idx]
+    derivative = np.roll(np.gradient(s1), 2)
+    c = s1*derivative
 
     # surface index
     try:
