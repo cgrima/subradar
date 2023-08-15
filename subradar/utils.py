@@ -197,6 +197,6 @@ def gcc(x, y, weight='standard', **kwargs):
     tau = np.mod(tau, n_ini).astype(int)
     tau = tau if tau <= n_ini/2 else tau-n_ini
     val = np.abs(cc).max()
-    
+
     # TODO: this would be somewhat quicker as a namedtuple
     return {'tau':tau, 'val':val, 'cc':cc, 'ch':ch}
