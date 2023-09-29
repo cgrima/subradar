@@ -147,8 +147,10 @@ class Results:
         
         fig, ax = plt.subplots()
         
-        im = ax.imshow(self.radargram(compression=compression, absolute=True, pdb=pdb, rotate=True),
-                      extent=[0, 1201, fast_time[-1]*1e6, fast_time[0]*1e6], aspect=aspect)
+        rdg = self.radargram(compression=compression, absolute=True, pdb=pdb, rotate=True)
+        
+        im = ax.imshow(rdg, extent=[0, np.shape(rdg)[1], 
+                                    fast_time[-1]*1e6, fast_time[0]*1e6], aspect=aspect)
         
         # colorbar
         cax = fig.add_axes([ax.get_position().x1+0.01,ax.get_position().y0,0.02,ax.get_position().height])
