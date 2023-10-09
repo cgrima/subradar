@@ -4,7 +4,7 @@
 import numpy as np
 import scipy.constants as ct
 import scipy.signal
-import scipy.fftpack
+import scipy.fft
 
 
 #-------------------
@@ -134,7 +134,7 @@ def geo_loss(h):
 
 def gcc(x, y, weight='standard', **kwargs):
     """Generalized Cross-correlation between two vectors
-    
+
     Arguments
     ---------
     x: vector array
@@ -143,7 +143,7 @@ def gcc(x, y, weight='standard', **kwargs):
         signal 2
     weight: string
         filter to be applied on both signals
-        
+
     Output
     ------
     tau: integer
@@ -158,21 +158,21 @@ def gcc(x, y, weight='standard', **kwargs):
     n_ini = int(x.size)
     _, ch = scipy.signal.coherence(x, y, nfft=n_ini)
     x, y = np.abs(x), np.abs(y)
-    padx = np.zeros(x.size)
-    pady = np.zeros(y.size)
+    #padx = np.zeros(x.size)
+    #pady = np.zeros(y.size)
     x = np.hstack([x,x])
     y = np.hstack([y,y])
     n = x.size
-    X = scipy.fftpack.fft(x)
-    Y = scipy.fftpack.fft(y)
+    X = scipy.fft.fft(x)
+    Y = scipy.fft.fft(y)
     Pxx = X * np.conj(X)
     Pyy = Y * np.conj(Y)
     Pxy = X * np.conj(Y)
-    
+
     Cxy = ch
     if weight == 'standard':
         W = 1.
-    if weight == 'wiener':
+    elif weight == 'wiener':
         W = 1./Cxy
     elif weight == 'roth':
         W = 1./Pxx
@@ -183,17 +183,20 @@ def gcc(x, y, weight='standard', **kwargs):
     elif weight == 'ml':
         K = Cxy / (1.-Cxy)
         W =  K / np.abs(Pxy)
+    else:
+        raise ValueError("Unknown weight '%s'" % weight)
 
     # Correlation Coefficient
-    cc = np.abs(scipy.fftpack.ifft(Pxy * W ))#[1:]
+    cc = np.abs(scipy.fft.ifft(Pxy * W ))#[1:]
     n_ini = int(n/2)
     cc = cc[n_ini:n_ini+n]
     cc = np.roll(cc, n_ini)
-    
+
     # TDE
     tau = np.abs(cc).argmax()
     tau = np.mod(tau, n_ini).astype(int)
     tau = tau if tau <= n_ini/2 else tau-n_ini
     val = np.abs(cc).max()
-        
+
+    # TODO: this would be somewhat quicker as a namedtuple
     return {'tau':tau, 'val':val, 'cc':cc, 'ch':ch}

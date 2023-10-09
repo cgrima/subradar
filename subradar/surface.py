@@ -1,33 +1,32 @@
-"""Various tools fpr surface detection"""
+"""Various tools for surface detection"""
 
 import numpy as np
 import pandas as pd
 import scipy.signal
 from . import utils
-import copy
 
 
-def detector(rdg, y0=[], winsize=100, method='grima2012', axis=0, **kwargs):
-    """Surface detection with the choosen method
+def detector(rdg, y0=None, winsize=100, method='grima2012', axis=0, **kwargs):
+    """Surface detection with the chosen method
 
     Input
     -----
     rdg: 2d-array
         radargram.
 
-    y0: array
+    y0: 1d-array
         Initial estimation for the location of the surface.
         Optional.
 
     winsize: float
         Size of the window around y0 to look for the surface.
-        Activated only if y0 > 0.
+        Activated only if y0 is a nonempty array.
 
     method: string
         method to use for surface detection.
 
     axis: 0 or 1
-        Long-time axis.
+        Indicate which axis is long-time (slow-time) axis. default=0
 
     Output
     ------
@@ -36,34 +35,33 @@ def detector(rdg, y0=[], winsize=100, method='grima2012', axis=0, **kwargs):
 
     """
     if axis == 1:
-        rdg = np.rot90(rdg)
+        rdg = np.transpose(rdg)
 
-    xsize = rdg.shape[0]
-    ysize = rdg.shape[1]
-    y = np.zeros(xsize)
+    xsize, ysize = rdg.shape
+    y = np.empty(xsize)
+
+    detectors = {
+        'maximum': maximum,
+        'grima2012': grima2012,
+        'mouginot2010': mouginot2010,
+    }
+    fdetector = detectors[method]
 
     # Detection
-    for xi in np.arange(xsize):
-        signal = rdg[xi,:]
-
+    for xi in range(xsize):
         #index vector
-        if len(y0) > 0:
+        if y0 is not None and len(y0) > 0:
             idx = np.arange(winsize)+y0[xi]-winsize/2.
         else:
             idx = np.arange(ysize)
-        
-        # Method selection
-        if method == 'maximum':
-            y[xi], c = maximum(signal, idx=idx, **kwargs)
-        if method == 'grima2012':
-            y[xi], c = grima2012(signal, idx=idx, **kwargs)
-        if method == 'mouginot2010':
-            y[xi], c = mouginot2010(signal, idx=idx, **kwargs)
+
+        y[xi], _ = fdetector(rdg[xi, :], idx=idx, **kwargs)
+
 
     return y
 
 
-def maximum(signal, idx=[], **kwargs):
+def maximum(signal, idx=(), **kwargs):
     """Surface detection from the maximum within a window
     
     Parameters
@@ -101,9 +99,9 @@ def maximum(signal, idx=[], **kwargs):
     return y, c
 
 
-def mouginot2010(signal, idx=[], period=3, window=30, **kwargs):
+def mouginot2010(signal, idx=(), period=3, window=30, **kwargs):
     """Surface detection using [Mouginot et al. 2010]
-    
+
     Parameters
     ----------
     signal: array
@@ -147,9 +145,9 @@ def mouginot2010(signal, idx=[], period=3, window=30, **kwargs):
     return y, c
 
 
-def grima2012(signal, idx=[], **kwargs):
+def grima2012(signal, idx=(), **kwargs):
     """Surface detection from [Grima et al. 2012]
-    
+
     Parameters
     ----------
     signal: array
@@ -175,8 +173,9 @@ def grima2012(signal, idx=[], **kwargs):
         idx = np.array(idx).astype(int) # make idx an integer array
 
     # Estimator calculation
-    derivative = np.roll(np.gradient(signal[idx]), 2)
-    c = signal[idx]*derivative
+    s1 = signal[idx]
+    derivative = np.roll(np.gradient(s1), 2)
+    c = s1*derivative
 
     # surface index
     try:
@@ -184,104 +183,102 @@ def grima2012(signal, idx=[], **kwargs):
     except ValueError:
         y = np.nan
     return y, c
-    
-    
+
+
 def gcc(rdg, tau_threshold=2, **kwargs):
     """Surface detection from relative time delay obtained through generalized
     cross-correlation of each contiguous range lines
-    
+
     Parameters
     ----------
     rdg: 2d-array
         radargram
-    
+        axis 0 is slow time, axis 1 is fast time
+
     Return
     ------
     """
     #---------------
     # Initialization
-    
-    yn = np.arange(rdg.shape[1])
-    tau = np.zeros(yn.size, dtype=int)
-    val = np.zeros(yn.size)
-    cc = np.abs(rdg)*0
-    ch = np.abs(rdg)*0
-    offset = np.zeros(yn.size, dtype=int)
-    
+    xsize, ysize = rdg.shape
+    yn = list(range(ysize))
+    tau = np.empty(ysize, dtype=int)
+    val = np.empty(ysize)
+    cc = np.empty_like(rdg) #np.abs(rdg)*0
+    #ch = np.empty_like(rdg) #np.abs(rdg)*0
+    #offset = np.empty(ysize, dtype=int)
+
     #-------------------------
     # GCC applied on radargram
-    
+
     # All records except last
-    for i in yn[:-1]:
-        x, y = rdg[:, i], rdg[:, i+1]
-        _ = utils.gcc(x, y, **kwargs)
+    for i in range(ysize-1):
+        _ = utils.gcc(rdg[:, i], rdg[:, i+1], **kwargs)
         tau[i] = _['tau']
         val[i] = _['val']
         cc[:,i] = _['cc']
         #ch[:,i] = _['ch']
-    
+
+    # Question: can we reuse the last value calculated?
     # Last record
     _ = utils.gcc(rdg[:, i], rdg[:, i-1], **kwargs)
     tau[-1] = _['tau']
     val[-1] = _['val']
     cc[:,-1] = _['cc']
     #ch[:,-1] = _['ch']
-    
+
     # Quality flag when tau gradient higher than dtau_threshold
     #dtau = np.roll( np.gradient( np.abs(tau)) ,-1)
-    where_bad = np.where(np.abs(tau) > tau_threshold)[0]
-    #where_bad = np.intersect1d(np.where(np.abs(dtau) > dtau_threshold)[0], np.where(val < np.median(val))[0])
-    ok =np.zeros(yn.size)+1
-    ok[where_bad] = 0
-    
-    
+    ok = np.abs(tau) <= tau_threshold
+
+
     #----------------------------------------
-    # Vertical offset that correponsds to tau
-    
-    offset = [np.sum(tau[:i]) for i in yn]
-    offset = np.array(offset)
-    
-    
+    # Vertical offset that correponds to tau
+
+    offset = np.cumsum(tau) # tau is an int, so offset should be, too
+
+
     #-------------------
     # Corrected offsets
-    
+
     #Radargram rolled with offset
-    rdg2 = copy.deepcopy(rdg)
-    for i in yn:
+    rdg2 = np.empty_like(rdg)
+    for i in range(ysize):
         rdg2[:,i] = np.roll(rdg[:,i], offset[i])
-    
+
+    # TODO: does this really need to be a nested function?
     # Radargram is divided by chunks that are bounded where ok=0
     def _data_chunks(data, stepsize=1):
         data_id = np.arange(data.size)*data
         pieces = np.split(data_id, np.where(np.diff(data_id) != stepsize)[0]+1)
         chunks = [i for i in pieces if (i.size > 1)]
         return [np.array(chunk, dtype=int) for chunk in chunks]
-    
+
     chunks = _data_chunks(ok)
-    
-    # Cumulative sum of each chunk to assess the average coordinate 
+
+    # Cumulative sum of each chunk to assess the average coordinate
     # of the surface echo in each chunk
     chunk_cumsums = [np.abs(rdg2[:, chunk].sum(axis=1)) for chunk in chunks]
     chunk_cumsum_argmaxs = [np.argmax(chunk_cumsum) for chunk_cumsum in chunk_cumsums]
-    
+
     # Chunks are aligned for their average surface echo coordinate to match
-    offset2 = copy.deepcopy(offset)
+    offset2 = np.empty_like(offset)
     for i, chunk in enumerate(chunks):
         offset2[chunk] = offset[chunk] - chunk_cumsum_argmaxs[i] + chunk_cumsum_argmaxs[0]
 
     del rdg2
-        
-        
+    # NB: if you're doing a del, you should probably make this a function
+
     #-------------------------------
     # Coordinate of the surface echo
 
-    rdg3 = copy.deepcopy(rdg)
-    for i in yn:
+    rdg3 = np.empty_like(rdg)
+    for i in range(ysize):
         rdg3[:,i] = np.roll(rdg[:,i], offset2[i])
     y0 = np.argmax( np.abs(rdg3.sum(axis=1)) )
     y = y0 + offset2
     del rdg3
- 
-    
+
+    # TODO: remove yn?  do you really need it?
     return {'tau':tau.astype(int), 'val':val, 'cc':cc, 'ok':ok, 'yn':yn,
     'offset':offset, 'offset2':offset2, 'y':y}

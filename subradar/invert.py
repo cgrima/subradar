@@ -1,18 +1,17 @@
 """Signal inversion"""
 
-from . import utils
-from .Classdef import Fresnel, Signal
+from importlib import import_module
 from scipy import integrate
 import numpy as np
 from numpy import cos, exp, log, log10, pi, sqrt
-from importlib import import_module
 import matplotlib.pyplot as plt
 
+from . import utils
+from .Classdef import Fresnel, Signal
 
-nan = float('nan')
 
 
-def srf2power_norminc(model, approx, gain=lambda th:1, th_max=nan,
+def srf2power_norminc(model, approx, gain=lambda th:1, th_max=np.nan,
                       db=True, kind='isotropic gaussian', **kwargs):
     """Power components over circular footprint at normal incident
     from surface properties
@@ -57,15 +56,15 @@ def srf2power_norminc(model, approx, gain=lambda th:1, th_max=nan,
 
 
 
-def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=nan,
+def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=np.nan,
               th_max=.1, db=True, kind='isotropic gaussian',
-              ep_range=[1.4,2.5], cl_logrange=[-1, 2], n=50, verbose=False):
+              ep_range=(1.4,2.5), cl_logrange=(-1, 2), n=50, verbose=False):
     """Surface properties solutions from Power components [in dB]
 
     EXAMPLE
     =======
     sr.invert.power2srf_norminc('iem','Small_S', pc, pn, th_max=3/1000.,wf=wf,
-    verbose=True, cl_logrange=[5], n=50)
+    verbose=True, cl_logrange=(5,), n=50)
 
     NOTE
     ====
@@ -74,7 +73,7 @@ def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=nan,
     Else, use an array of 2 elements to determine the range.
     """
     pc = 10**(pc/10.)
-    s = Signal(wf=wf, wb=nan, th=th_max)
+    s = Signal(wf=wf, wb=np.nan, th=th_max)
 
     ep = np.linspace(ep_range[0], ep_range[1], n)
     r = utils.R(1, ep, 1, 1, s.th)
@@ -83,35 +82,29 @@ def power2srf_norminc(model, approx, pc, pn, gain=lambda th:1, wf=nan,
     sh = sqrt(log(r**2/pc)) / (2*s.wk*cos(s.th))
     sh[np.isnan(sh)] = 0
 
-    #cl_out = np.nan * cl
-
     # set the iterations for cl
-    if np.size(cl_logrange) == 1:
-        jn = 1
-    else:
-        jn = n
+    jn = 1 if len(cl_logrange) == 1 else n
     cl = 10**np.linspace(cl_logrange[0], cl_logrange[-1], jn)
-    cl_out = np.nan * ep
+    cl_out = np.full_like(ep, np.nan)
 
     # Iterations over the field of parameters
     for i, val in enumerate(ep):
-        if verbose is True:
+        if verbose:
             print('\n')
-        if sh[i] != 0: #if no solution for sh, do not compute
-            for j in reversed(range(0, jn, 1)):
-                tmp = srf2power_norminc(model, approx, gain=gain, th_max=th_max, 
-                      wf=wf, ep2=ep[i], sh=sh[i], cl=cl[j])['pn']
-                if verbose is True:
-                    print('[%04d - %04d] ep = %05.2f, sh= %09.6f, cl = %08.3f, pn = %05.1f'
-                          % (i, j, ep[i], sh[i], cl[j], tmp))
-                if (tmp < pn) and ~np.isinf(tmp):
-                    jn = j+1
-                    if jn > n:
-                        jn = n
-                    cl_out[i] = cl[j]
-                    break
-            if (jn == 1) and (tmp > pn) and ~np.isinf(tmp):
-                ep, sh, cl_out = ep[i], sh[i], cl_out[i]
+        if sh[i] == 0: #if no solution for sh, do not compute
+            continue
+        for j in range(jn-1, -1, -1): # j in reversed(range(0, jn, 1)):
+            tmp = srf2power_norminc(model, approx, gain=gain, th_max=th_max,
+                  wf=wf, ep2=ep[i], sh=sh[i], cl=cl[j])['pn']
+            if verbose:
+                print('[%04d - %04d] ep = %05.2f, sh= %09.6f, cl = %08.3f, pn = %05.1f'
+                      % (i, j, ep[i], sh[i], cl[j], tmp))
+            if (tmp < pn) and ~np.isinf(tmp):
+                jn = min(j+1, n)
+                cl_out[i] = cl[j]
                 break
-
+        if (jn == 1) and (tmp > pn) and ~np.isinf(tmp):
+            ep, sh, cl_out = ep[i], sh[i], cl_out[i]
+            break
+    # Question: why is ep returned in eps and ep?
     return {'eps':ep, 'ep':ep, 'sh':sh, 'cl':cl_out}

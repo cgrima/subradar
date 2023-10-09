@@ -4,12 +4,12 @@ __author__ = 'Cyril Grima'
 
 import numpy as np
 
-from . import roughness, surface, utils
+from . import utils
 
 NAN = float('nan')
 
 
-class Signal(object):
+class Signal:
     """Signal relationships"""
     def __init__(self, wf=NAN, bw=NAN, th=0., bmw=NAN, h=NAN, **kwargs):
         self.wf = wf  # Signal central frequency [Hz]
@@ -29,7 +29,7 @@ class Signal(object):
                              }
 
 
-class Fresnel(object):
+class Fresnel:
     """Fresnel and Snell's relationships"""
     def __init__(self, ep1=1., ep2=1., mu1=1., mu2=1., th=0, **kwargs):
         self.ep1 = ep1  # Electric permittivity 1
@@ -50,7 +50,7 @@ class Fresnel(object):
                   }
 
 
-class Roughness(object):
+class Roughness:
     """Roughness relationships"""
     def __init__(self, wf=NAN, sh=0, cl=np.inf, **kwargs):
         self.wf = wf  # Signal central frequency [Hz]
