@@ -246,15 +246,18 @@ class Results:
         return out
         
         
-    def surface(self, method='maximum', compression='No windowing', **kwargs):
+    def surface(self, method='maximum', compression='No windowing', y0=600, **kwargs):
         """Surface echo extraction
         """
-        rdg = self.radargram(compression=compression)
+        rdg = self.radargram(compression=compression, absolute=True, pdb=True, rotate=True)
+        #rdg = self.radargram(compression=compression)
         
-        y0 = np.full(np.shape(rdg)[0], int(np.shape(rdg)[1]/2))
+        #y0 = np.full(np.shape(rdg)[0], y0)
         
-        ys = surface.detector(rdg, axis=0, method=method, y0=y0,**kwargs)
-        amps = [rdg[i, int(y)] for i, y in enumerate(ys)]
+        #ys = surface.detector(rdg, axis=0, method=method, y0=y0, **kwargs)
+        ys = [np.argmax(rdg[:,i]) for i in np.arange(np.shape(rdg)[1])]
+        amps = [np.max(rdg[:,i]) for i in np.arange(np.shape(rdg)[1])]
+        #amps = [rdg[i, int(y)] for i, y in enumerate(ys)]
         return {'y':ys, 'amp':amps}
         
         
