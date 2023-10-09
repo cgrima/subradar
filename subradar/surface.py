@@ -53,12 +53,52 @@ def detector(rdg, y0=[], winsize=100, method='grima2012', axis=0, **kwargs):
             idx = np.arange(ysize)
         
         # Method selection
+        if method == 'maximum':
+            y[xi], c = maximum(signal, idx=idx, **kwargs)
         if method == 'grima2012':
             y[xi], c = grima2012(signal, idx=idx, **kwargs)
         if method == 'mouginot2010':
             y[xi], c = mouginot2010(signal, idx=idx, **kwargs)
 
     return y
+
+
+def maximum(signal, idx=[], **kwargs):
+    """Surface detection from the maximum within a window
+    
+    Parameters
+    ----------
+    signal: array
+        signal vector
+
+    idx: array
+        the indices of the array where to search for the echo
+
+    Return
+    ------
+    y: float
+        index of the location of the detected echo
+
+    c: array
+        criteria computed with idx
+    """
+
+    # array of index where to search for the surface
+    idx = np.array(idx)
+    if idx.size == 0 :
+        idx = np.arange(len(signal)).astype(int)
+    else:
+        idx = np.array(idx).astype(int) # make idx an integer array
+
+    # Estimator calculation
+    c = signal[idx]
+
+    # surface index
+    try:
+        y = idx[np.nanargmax(c)]
+    except ValueError:
+        y = np.nan
+    return y, c
 
 
 def mouginot2010(signal, idx=[], period=3, window=30, **kwargs):
