@@ -23,6 +23,6 @@ wl : Wavelength
 __version__ = "1.1.0"
 __author__ = "Cyril Grima"
 
-__all__ = ["iem", "invert", "roughness", "surface", "utils"]
+__all__ = ["iem", "invert", "roughness", "surface", "utils", "filtering", "simulation"]
 
-from . import iem, invert, roughness, surface, utils
+from . import iem, invert, roughness, surface, utils, filtering, simulation
