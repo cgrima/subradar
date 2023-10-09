@@ -140,7 +140,7 @@ class Results:
         return ax
         
 
-    def plot_radargram(self, compression='Hann windowing', aspect=6, pdb=True):
+    def plot_radargram(self, compression='Hann windowing', aspect=6, pdb=True, microsec=True):
         """Browse product of the results
         """
         fast_time = self.simulation['t']
@@ -149,8 +149,12 @@ class Results:
         
         rdg = self.radargram(compression=compression, absolute=True, pdb=pdb, rotate=True)
         
-        im = ax.imshow(rdg, extent=[0, np.shape(rdg)[1], 
-                                    fast_time[-1]*1e6, fast_time[0]*1e6], aspect=aspect)
+        if microsec:
+            extent = [0, np.shape(rdg)[1], fast_time[-1]*1e6, fast_time[0]*1e6]
+        else:
+            extent = [0, np.shape(rdg)[1], 0, np.shape(rdg)[0]]
+            
+        im = ax.imshow(rdg, extent=extent, aspect=aspect)
         
         # colorbar
         cax = fig.add_axes([ax.get_position().x1+0.01,ax.get_position().y0,0.02,ax.get_position().height])
@@ -242,19 +246,22 @@ class Results:
         return out
         
         
-    def surface(self, method='grima2012', compression='No windowing'):
+    def surface(self, method='maximum', compression='No windowing', **kwargs):
         """Surface echo extraction
         """
         rdg = self.radargram(compression=compression)
-        ys = surface.detector(rdg, axis=0, method=method)
+        
+        y0 = np.full(np.shape(rdg)[0], int(np.shape(rdg)[1]/2))
+        
+        ys = surface.detector(rdg, axis=0, method=method, y0=y0,**kwargs)
         amps = [rdg[i, int(y)] for i, y in enumerate(ys)]
         return {'y':ys, 'amp':amps}
         
         
-    def surface_rsr(self, method='grima2012', fit_model='hk'):
+    def surface_rsr(self, method='maximum', fit_model='hk', **kwargs):
         """RSR
         """
-        srf = self.surface(method=method)
+        srf = self.surface(method=method, **kwargs)
         amp = np.absolute(srf['amp'])
         f = rsr.run.processor(amp, fit_model=fit_model)
         return f
