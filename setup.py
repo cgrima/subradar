@@ -21,7 +21,7 @@ LONG_DESC_TYPE = "text/markdown"
 
 # Dependencies
 INSTALL_REQUIRES = [
-      'importlib>=1.0.4',
+#      'importlib>=1.0.4',
       'matplotlib>=3.3.3',
       'mpmath>=1.1.0',
       'numpy>=1.19.4',
