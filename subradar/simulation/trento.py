@@ -140,14 +140,15 @@ class Results:
         return ax
         
 
-    def plot_radargram(self, compression='Hann windowing', aspect=6, pdb=True, microsec=True):
+    def plot_radargram(self, aspect:int=6, microsec:bool=True, **kwargs):
         """Browse product of the results
+        kwargs = Anything to pass to read_frame (including compression options
         """
         fast_time = self.simulation['t']
-        
+         
         fig, ax = plt.subplots()
         
-        rdg = self.radargram(compression=compression, absolute=True, pdb=pdb, rotate=True)
+        rdg = self.radargram(rotate=True, **kwargs)
         
         if microsec:
             extent = [0, np.shape(rdg)[1], fast_time[-1]*1e6, fast_time[0]*1e6]
@@ -165,21 +166,6 @@ class Results:
         ax.set_xlabel(r'Range bin')
         
         return ax
-    
-    
-    def read_frame(self, i, compression=False):
-        """Read a frame (range line)
-        i = frame number
-        """
-        i = i-1
-        out = scipy.io.loadmat(self.frame_filenames()[i])['Final_signal'][0]
-        
-        if compression == 'Hann windowing':
-            out = filtering.pulse_compression(self.simulation['Signal'], out)
-        elif compression == 'No windowing':
-            out = filtering.pulse_compression(self.simulation['Signal_raw'], out)
-        
-        return out
     
     
     def plot_frame(self, i):
@@ -215,56 +201,99 @@ class Results:
         ax.legend()
         
         return axs
-        
-        
     
-    def radargram(self, 
-                  rotate=False,       # Rotate array for convenient display
-                  absolute=False,     # Provide the absolute values instead of complex number
-                  pdb=False,         # Provide power in dB
-                  **kwargs,          # Anything to pass to read_frame (including compression options)
-                 ):
-        """ Stack the range lines to produce a 2D radargram
+    
+    def read_frame(self, i:int,
+                   compression:str='No windowing', 
+                   absolute:bool=False, 
+                   pdb:bool=False, **kwargs):
+        """Read a frame (range line)
+        i = frame number
+        compression = "No windowing" or "Hann windowing"
+        absolute = Provide the absolute values instead of complex number
+        pdb = Provide power in dB
         """
-        Nx = len(self.frame_filenames())
-        Ny = len(self.simulation['signal_window'])
+        i = i-1
+        out = scipy.io.loadmat(self.frame_filenames()[i])['Final_signal'][0]
         
-        out = np.empty((Nx, Ny),dtype=np.complex_)
-        for i in np.arange(Nx):
-            frame = self.read_frame(i, **kwargs)
-            out[i,:] = frame
-        
-        if rotate:
-            out = np.rot90(out)
+        if compression == 'Hann windowing':
+            out = filtering.pulse_compression(self.simulation['Signal'], out)
+        elif compression == 'No windowing':
+            out = filtering.pulse_compression(self.simulation['Signal_raw'], out)
+        else:
+            pass
         
         if absolute:
             out = np.absolute(out)
             
         if pdb:
-            out = 20*np.log10(out)
+            out = 20*np.log10(np.absolute(out))
             
         return out
         
         
-    def surface(self, method='maximum', compression='No windowing', y0=600, **kwargs):
-        """Surface echo extraction
+    
+    def radargram(self, rotate=False, **kwargs):
+        """ Stack the range lines to produce a 2D radargram
+        rotate = rotate the array by 90 degrees
+        kwargs = Anything to pass to read_frame
         """
-        rdg = self.radargram(compression=compression, absolute=True, pdb=True, rotate=True)
-        #rdg = self.radargram(compression=compression)
+        Nx = len(self.frame_filenames())
+        Ny = len(self.simulation['signal_window'])
         
-        #y0 = np.full(np.shape(rdg)[0], y0)
+        for i in np.arange(Nx):
+            frame = self.read_frame(i, **kwargs)
+            # Make results array of correct type
+            if i == 0:
+                if frame.dtype == 'complex128':
+                    out = np.empty((Nx, Ny), dtype='complex128')
+                else:
+                    out = np.empty((Nx, Ny))
+            out[i,:] = frame
         
-        #ys = surface.detector(rdg, axis=0, method=method, y0=y0, **kwargs)
-        ys = [np.argmax(rdg[:,i]) for i in np.arange(np.shape(rdg)[1])]
-        amps = [np.max(rdg[:,i]) for i in np.arange(np.shape(rdg)[1])]
-        #amps = [rdg[i, int(y)] for i, y in enumerate(ys)]
-        return {'y':ys, 'amp':amps}
+        if rotate:
+            out = np.rot90(out)
+            
+        return out
         
         
-    def surface_rsr(self, method='maximum', fit_model='hk', **kwargs):
+    def surface(self, **kwargs):
+        """Surface echo extraction
+        kwargs = Anything to pass to read_frame
+        """
+        if 'compression' in kwargs:
+            compression = kwargs['compression']
+        else:
+            compression = None
+            
+        rdg_ref = self.radargram(compression=compression, absolute=True)
+        rdg = self.radargram(**kwargs)
+        
+        ys = [np.argmax(rdg_ref[i,:]) for i in np.arange(np.shape(rdg)[0])]
+        val = [rdg[i,ys[i]] for i in np.arange(len(ys))]
+        
+        # Spatial Coordinates
+        coord = self.xy()
+        
+        return {'y':ys, 'val':val, 'coord':coord}
+        
+        
+    def surface_rsr(self, fit_model='hk', lim=None, **kwargs):
         """RSR
         """
-        srf = self.surface(method=method, **kwargs)
-        amp = np.absolute(srf['amp'])
+        if 'compression' in kwargs:
+            compression = kwargs['compression']
+        else:
+            compression = None
+            
+        srf = self.surface(compression=compression, absolute=True)
+        amp = np.array(srf['val'])
+        
+        if lim:
+            y = srf['coord'][1]
+            idx = [i for i, val in enumerate(y) if (val > lim[0]) and (val < lim[1])]
+            amp2 = [amp[i] for i in idx]
+            amp = np.array(amp2)
+            
         f = rsr.run.processor(amp, fit_model=fit_model)
         return f
