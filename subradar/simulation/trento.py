@@ -204,22 +204,27 @@ class Results:
     
     
     def read_frame(self, i:int,
-                   compression:str='No windowing', 
+                   compression:str='Hann windowing', 
                    absolute:bool=False, 
+                   norm=False,
                    pdb:bool=False, **kwargs):
         """Read a frame (range line)
         i = frame number
         compression = "No windowing" or "Hann windowing"
         absolute = Provide the absolute values instead of complex number
+        norm = Whether to normalize to the max of the chirp
         pdb = Provide power in dB
         """
         i = i-1
         out = scipy.io.loadmat(self.frame_filenames()[i])['Final_signal'][0]
         
         if compression == 'Hann windowing':
-            out = filtering.pulse_compression(self.simulation['Signal'], out)
+            chirp = self.simulation['Signal']/self.read_simulation()['Norm']
+            out = filtering.pulse_compression(chirp, out, norm=norm)
+            
         elif compression == 'No windowing':
-            out = filtering.pulse_compression(self.simulation['Signal_raw'], out)
+            chirp = self.simulation['Signal_raw']/self.read_simulation()['Norm']
+            out = filtering.pulse_compression(chirp, out, norm=norm)
         else:
             pass
         

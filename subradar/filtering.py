@@ -2,7 +2,7 @@ import numpy as np
 from scipy.signal import chirp, fftconvolve
 
 
-def pulse_compression(chirp_signal, measured_signal, normalize=False):
+def pulse_compression(chirp_signal, measured_signal, norm=False):
     """
     Perform pulse compression on a complex signal using a given complex chirp signal with numpy.correlate.
     
@@ -23,9 +23,14 @@ def pulse_compression(chirp_signal, measured_signal, normalize=False):
     S = np.fft.fft(s)
     Cconj= np.conj(np.fft.fft(c))
     OUT = S*Cconj
+        
     
     # Reformat
     out = np.fft.ifft(OUT)
     out = np.roll(out, int(len(out)/2))
+    
+    if norm:
+        chirp = np.fft.ifft(np.fft.fft(c)*Cconj)
+        out = out/np.max(chirp)
     
     return out
