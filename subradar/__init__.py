@@ -20,7 +20,7 @@ wk : Wave number
 wl : Wavelength
 """
 
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 __author__ = "Cyril Grima"
 
 __all__ = ["iem", "invert", "roughness", "surface", "utils", "filtering", "simulation", "fractal"]

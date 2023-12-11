@@ -6,7 +6,7 @@ import scipy.signal
 from . import utils
 
 
-def detector(rdg, y0=None, winsize=100, method='grima2012', axis=0, **kwargs):
+def detector(rdg, y0=None, winsize=100, method='grima2012', axis=0, out_dict=False, **kwargs):
     """Surface detection with the chosen method
 
     Input
@@ -28,6 +28,9 @@ def detector(rdg, y0=None, winsize=100, method='grima2012', axis=0, **kwargs):
     axis: 0 or 1
         Indicate which axis is long-time (slow-time) axis. default=0
 
+    out_dict: True or False
+        Return a dictionary
+
     Output
     ------
     y: float
@@ -39,6 +42,7 @@ def detector(rdg, y0=None, winsize=100, method='grima2012', axis=0, **kwargs):
 
     xsize, ysize = rdg.shape
     y = np.empty(xsize)
+    c = np.empty(xsize)
 
     detectors = {
         'maximum': maximum,
@@ -55,10 +59,13 @@ def detector(rdg, y0=None, winsize=100, method='grima2012', axis=0, **kwargs):
         else:
             idx = np.arange(ysize)
 
-        y[xi], _ = fdetector(rdg[xi, :], idx=idx, **kwargs)
+        y[xi], cs = fdetector(rdg[xi, :], idx=idx, **kwargs)
+        c[xi] = np.nanmax(cs)
 
-
-    return y
+    if out_dict:
+        return {'y':y, 'c':c}
+    else:
+        return y
 
 
 def maximum(signal, idx=(), **kwargs):
