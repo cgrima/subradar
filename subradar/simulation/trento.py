@@ -23,8 +23,9 @@ class Results:
         self.trajectory = self.read_trajectory()
         self.simulation = self.read_simulation()
         self.geoelectric = self.read_geoelectric()
-        self.inputs = dict()
-        [self.inputs.update(self.loadmat(filename)) for filename in self.input_filenames]
+        #self.inputs = dict()
+        #_ = [self.inputs.update((self.loadmat(filename)) for filename in self.input_filenames]
+        self.inputs = {**self.trajectory, **self.simulation, **self.geoelectric}
     
     
     def frame_filenames(self):
@@ -49,13 +50,13 @@ class Results:
     
             
     def read_simulation(self):
-        filename = [filename for filename in self.input_filenames if 'Sim' in filename][0]
+        filename = [filename for filename in self.input_filenames if 'Simulation_' in filename][0]
         out = self.loadmat(filename)
         return out
     
     
     def read_geoelectric(self):
-        filename = [filename for filename in self.input_filenames if 'Geo' in filename][0]
+        filename = [filename for filename in self.input_filenames if 'Geoelectrical_' in filename][0]
         out = self.loadmat(filename)
         
         # Add the DEM (for any reason, only h5py sees it, not hdf5storage)
@@ -71,7 +72,7 @@ class Results:
     
     
     def read_trajectory(self):
-        filename = [filename for filename in self.input_filenames if 'Traj' in filename][0]
+        filename = [filename for filename in self.input_filenames if 'Trajectory_' in filename][0]
         out = self.loadmat(filename)
         return out
     
@@ -79,7 +80,7 @@ class Results:
     def dem(self):
         """Provide the input DEM
         """
-        out = self.geoelectric['b']
+        out = self.inputs['b']
         out = np.rot90(out, k=1)
         return out
     
@@ -89,11 +90,11 @@ class Results:
         """
         #x0_meter = self.input_data('Traj')['sc_position_x']
         #y0_meter = self.input_data('Traj')['sc_position_y']
-        dx = self.geoelectric['DELTA_X']
+        dx = self.inputs['DELTA_X']
         #length = int(self.input_data('Traj')['TrackLengthTot'])
         
-        xs = self.trajectory['sc_position_x']
-        ys = self.trajectory['sc_position_y']
+        xs = self.inputs['sc_position_x']
+        ys = self.inputs['sc_position_y']
         
         #xs = np.full(length, x0_meter)#np.arange(length)*dx + x0_meter
         #ys = np.arange(length)*dx + y0_meter
@@ -109,11 +110,11 @@ class Results:
     def plot_trajectory(self):
         # Parameters
         dem = self.dem()
-        dx = self.geoelectric['DELTA_X']
+        dx = self.inputs['DELTA_X']
         x, y = self.xy(meters=True)
         radius = self.inputs['PulseLtdR']
-        x_length = self.geoelectric['l']*dx
-        y_length = self.geoelectric['m']*dx
+        x_length = self.inputs['l']*dx
+        y_length = self.inputs['m']*dx
 
         # FIGURE
         # ------
@@ -221,11 +222,11 @@ class Results:
         out = scipy.io.loadmat(self.frame_filenames()[i])['Final_signal'][0]
         
         if compression == 'Hann windowing':
-            chirp = self.inputs['Signal']/self.read_simulation()['Norm']
+            chirp = self.inputs['Signal']/self.inputs['Norm']
             out = filtering.pulse_compression(chirp, out, norm=norm)
             
         elif compression == 'No windowing':
-            chirp = self.inputs['Signal_raw']/self.read_simulation()['Norm']
+            chirp = self.inputs['Signal_raw']/self.inputs['Norm']
             out = filtering.pulse_compression(chirp, out, norm=norm)
         else:
             pass
