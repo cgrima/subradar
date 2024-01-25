@@ -23,6 +23,8 @@ class Results:
         self.trajectory = self.read_trajectory()
         self.simulation = self.read_simulation()
         self.geoelectric = self.read_geoelectric()
+        self.inputs = dict()
+        [self.inputs.update(self.loadmat(filename)) for filename in self.input_filenames]
     
     
     def frame_filenames(self):
@@ -109,7 +111,7 @@ class Results:
         dem = self.dem()
         dx = self.geoelectric['DELTA_X']
         x, y = self.xy(meters=True)
-        radius = self.simulation['PulseLtdR']
+        radius = self.inputs['PulseLtdR']
         x_length = self.geoelectric['l']*dx
         y_length = self.geoelectric['m']*dx
 
@@ -144,7 +146,7 @@ class Results:
         """Browse product of the results
         kwargs = Anything to pass to read_frame (including compression options
         """
-        fast_time = self.simulation['t']
+        fast_time = self.inputs['t']
          
         fig, ax = plt.subplots()
         
@@ -176,7 +178,7 @@ class Results:
         raw_signal = self.read_frame(i)
         nowin_signal = self.read_frame(i, compression='No windowing')
         win_signal = self.read_frame(i, compression='Hann windowing')
-        time = self.simulation['t']*1e6
+        time = self.inputs['t']*1e6
 
         # Plot
         fig, axs = plt.subplots(1, 2, figsize=(15, 4))
@@ -219,11 +221,11 @@ class Results:
         out = scipy.io.loadmat(self.frame_filenames()[i])['Final_signal'][0]
         
         if compression == 'Hann windowing':
-            chirp = self.simulation['Signal']/self.read_simulation()['Norm']
+            chirp = self.inputs['Signal']/self.read_simulation()['Norm']
             out = filtering.pulse_compression(chirp, out, norm=norm)
             
         elif compression == 'No windowing':
-            chirp = self.simulation['Signal_raw']/self.read_simulation()['Norm']
+            chirp = self.inputs['Signal_raw']/self.read_simulation()['Norm']
             out = filtering.pulse_compression(chirp, out, norm=norm)
         else:
             pass
@@ -244,7 +246,7 @@ class Results:
         kwargs = Anything to pass to read_frame
         """
         Nx = len(self.frame_filenames())
-        Ny = len(self.simulation['signal_window'])
+        Ny = len(self.inputs['signal_window'])
         
         for i in np.arange(Nx):
             frame = self.read_frame(i, **kwargs)
