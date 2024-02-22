@@ -1,17 +1,7 @@
-import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from scipy import signal 
-from scipy import fft
-import scipy.constants as ct
-from scipy import integrate
-from scipy import special
-from scipy import constants
-import subradar as sr
-import pandas as pd
 import glob
-from labellines import labelLine, labelLines
-import seaborn as sns
+
+import numpy as np
+from scipy import integrate, special, constants
 
 # -------------------------------
 # TODO: INTEGRATION WITH THE REPO
@@ -23,7 +13,7 @@ def dB(func):
     """
     def func_wrapper(*args, dB=True, **kwargs):
         out = func(*args, **kwargs)
-        if dB is True:
+        if dB:
             return 10*np.log10(out)
         else:
             return out
@@ -86,7 +76,7 @@ class Scattering:
         if scale is None:
             scale = self.wl
         out = self.RMSd(scale=scale)/scale
-        if deg is True:
+        if deg:
             return np.rad2deg(np.arctan(out))
         return out
     
@@ -101,9 +91,9 @@ class Scattering:
         """Pulse-limited footprint radius OR area
         """
         out = np.sqrt(constants.c*self.Z/self.wb) # Radius
-        if area is True:
+        if area:
             out = np.pi*out**2 # Area
-        if norm is True:
+        if norm:
             out = out/self.wl
         return out
     
@@ -112,9 +102,9 @@ class Scattering:
         """Fresnel zone radius OR area
         """
         out = np.sqrt(self.Z*self.wl/2)
-        if area is True:
+        if area:
             out = np.pi*out**2 # Area
-        if norm is True:
+        if norm:
             out = out/self.wl
         return out
     
@@ -124,7 +114,7 @@ class Scattering:
         """
         frac = n/(4*np.pi**2*self.RMSs()**2*np.cos(self.phi)**2)
         out = (frac)**(1/2/self.H)
-        if norm is not True:
+        if not norm:
             out = out*self.wl
         return out
     
@@ -140,7 +130,7 @@ class Scattering:
         #A = self.fresnel_zone(area=True, dB=False)
         #out = 4*np.pi*A**2/self.wl
         out = self.coherent_RCS(Re=Re, H=0., sl=0., norm=False, dB=False)
-        if norm is True:
+        if norm:
             out = out/A
         return out
     
@@ -214,7 +204,7 @@ class Scattering:
             
         out_RCS = out*(np.pi*rmax)**2*self.wl**2
             
-        if norm is False:
+        if not norm:
             out = out_RCS
         
         if out_RCS > self.flat_RCS(Re=self.Re, dB=False, norm=False):
