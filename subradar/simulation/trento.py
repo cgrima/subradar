@@ -14,12 +14,14 @@ class Results:
     """
     def __init__(self, 
                  simulation_name: str, # Folder name of the simulation
-                 source_folder=('..', 'data', 'RadarSimulationResults')):
+                 source_folder=('..', 'data', 'RadarSimulationResults'),
+                 gain=1):
         
         self.simulation_name = simulation_name
         self.output_folder = os.path.join(*source_folder, simulation_name, 'OUTPUTS')
         self.input_folder = os.path.join(*source_folder, simulation_name, 'INPUTS')
         self.input_filenames = glob.glob(os.path.join(self.input_folder, '*.mat'))
+        self.gain = gain
         self.trajectory = self.read_trajectory()
         self.simulation = self.read_simulation()
         self.geoelectric = self.read_geoelectric()
@@ -210,7 +212,8 @@ class Results:
                    compression:str='Hann windowing', 
                    absolute:bool=False, 
                    norm=False,
-                   pdb:bool=False, **kwargs):
+                   pdb:bool=False,
+                   **kwargs):
         """Read a frame (range line)
         i = frame number
         compression = "No windowing" or "Hann windowing"
@@ -220,6 +223,7 @@ class Results:
         """
         i = i-1
         out = scipy.io.loadmat(self.frame_filenames()[i])['Final_signal'][0]
+        out = out*self.gain
         
         if compression == 'Hann windowing':
             chirp = self.inputs['Signal']/self.inputs['Norm']
