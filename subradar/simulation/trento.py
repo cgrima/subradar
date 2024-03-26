@@ -2,7 +2,7 @@ import os
 import numpy as np
 import scipy
 import glob
-import rsr
+#import rsr
 import matplotlib.pyplot as plt
 import h5py
 import hdf5storage
@@ -290,22 +290,22 @@ class Results:
         return {'y':ys, 'val':val, 'coord':coord}
         
         
-    def surface_rsr(self, fit_model='hk', lim=None, **kwargs):
-        """RSR
-        """
-        if 'compression' in kwargs:
-            compression = kwargs['compression']
-        else:
-            compression = None
+#    def surface_rsr(self, fit_model='hk', lim=None, **kwargs):
+#        """RSR
+#        """
+#        if 'compression' in kwargs:
+#            compression = kwargs['compression']
+#        else:
+#            compression = None
             
-        srf = self.surface(compression=compression, absolute=True)
-        amp = np.array(srf['val'])
+#        srf = self.surface(compression=compression, absolute=True)
+#        amp = np.array(srf['val'])
         
-        if lim:
-            y = srf['coord'][1]
-            idx = [i for i, val in enumerate(y) if (val > lim[0]) and (val < lim[1])]
-            amp2 = [amp[i] for i in idx]
-            amp = np.array(amp2)
+#        if lim:
+#            y = srf['coord'][1]
+#            idx = [i for i, val in enumerate(y) if (val > lim[0]) and (val < lim[1])]
+#            amp2 = [amp[i] for i in idx]
+#            amp = np.array(amp2)
             
-        f = rsr.run.processor(amp, fit_model=fit_model)
-        return f
+#        f = rsr.run.processor(amp, fit_model=fit_model)
+#        return f
