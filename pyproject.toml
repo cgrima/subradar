@@ -11,8 +11,10 @@ authors = [
     {name = "Cyril Grima", email = "cyril.grima@gmail.com"},
 ]
 
-description = "Python Library for electromagnetic physics applied to subsurface radars"
+description = "library for electromagnetic physics applied to subsurface radars"
 #license = "MIT"
+
+readme = {file = "README.md", content-type = "text/markdown"}
 
 classifiers = [
   # How mature is this project? Common values are
