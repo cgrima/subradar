@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
-sys.path.insert(1, '..')
+sys.path.insert(1, '../src')
 
 import subradar as sr
 
