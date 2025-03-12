@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "subradar"
+#dynamic = ["version"]
+version = "1.1.5"
+
+authors = [
+    {name = "Cyril Grima", email = "cyril.grima@gmail.com"},
+]
+
+description = "Python Library for electromagnetic physics applied to subsurface radars"
+#license = "MIT"
+
+classifiers = [
+  # How mature is this project? Common values are
+  "Development Status :: 4 - Beta",
+  #"Development Status :: 5 - Production/Stable",
+
+  # Indicate who your project is intended for
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Physics",
+
+  "License :: OSI Approved :: MIT License",
+  # Specify the Python versions you support here.
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+]
+
+
+#LONG_DESCRIPTION = (HERE / "README.md").read_text()
+#LONG_DESC_TYPE = "text/markdown"
+
+# Currently hdf5storage needs is not compatible with 3.12
+# https://github.com/frejanordsiek/hdf5storage/issues/130
+#requires-python = '<3.12'
+requires-python = '>=3.7'
+
+dependencies = [
+#      'importlib>=1.0.4',
+      'matplotlib>=3.3.3',
+      'mpmath>=1.1.0',
+      'numpy>=1.19.4',
+      'pandas>=1.1.4',
+      'scipy>=1.5.2',
+      'h5py',
+      'hdf5storage',
+]
+
+
+
+
+[project.urls]
+Repository = 'https://github.com/cgrima/subradar'
+Issues = 'https://github.com/cgrima/subradar/issues'
+
+[tool.uv.workspace]
+members = ["subradar"]
+
