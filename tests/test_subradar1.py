@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = "<3.12"
+# dependencies = [
+#     "h5py",
+#     "hdf5storage",
+#     "matplotlib",
+#     "mpmath",
+#     "numpy",
+#     "pandas",
+#     "scipy",
+# ]
+# ///
 
 import sys
 import unittest
